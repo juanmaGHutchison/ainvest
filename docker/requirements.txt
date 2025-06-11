@@ -1,0 +1,10 @@
+alpaca-py
+alpaca-trade-api
+python-dotenv
+python-dateutil
+kafka-python
+numpy
+scikit-learn
+pandas
+tensorflow
+

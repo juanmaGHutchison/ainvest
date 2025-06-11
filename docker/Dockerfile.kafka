@@ -1,0 +1,11 @@
+FROM confluentinc/cp-kafka:latest
+
+ARG KAFKA_PROP_FILENAME="kafka.properties"
+
+COPY resources/${KAFKA_PROP_FILENAME} /etc/kafka
+
+USER root
+
+RUN chown appuser:root /etc/kafka/${KAFKA_PROP_FILENAME}
+
+USER appuser
