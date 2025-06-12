@@ -18,14 +18,15 @@ class Broker_Adapter(Broker_Interface):
         self.broker_news: Alpaca_News
         self.broker_historic: Alpaca_Historic_Data
 
+    def init_news_api(self):
+        self.broker_news = Alpaca_News(self.API_KEY, self.API_SECRET)
+
     def init_historic_api(self):
         self.broker_historic = Alpaca_Historic_Data(self.API_KEY, self.API_SECRET)
 
-    def init_news_api(self):
-        print("TODO")
-
     def fetch_news(self, stock, what_to_do_func):
-        print("TODO")
+        self.broker.subscribe_news(what_to_do_func, stock)
+        self.broker.run()
 
     def get_data_from_stock(self, stock):
         # TODO: 120 days

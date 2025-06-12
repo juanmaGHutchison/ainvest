@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from libs.broker.broker_news_adapter import Broker_News_Adapter
+from libs.broker.broker_adapter import Broker_Adapter
 
 from kafka import KafkaProducer
 
@@ -14,15 +14,11 @@ async def process_news(news):
     print(news)
 
 if __name__ == "__main__":
-    load_dotenv("config/alpaca.env")
     load_dotenv("config/kafka.env")
     load_dotenv("config/producer.env")
 
-    API_KEY = os.getenv("API_KEY")
-    API_SECRET = os.getenv("API_SECRET")
-
-    # broker_news = Broker_News_Adapter(API_KEY, API_SECRET)
-    # broker_news.fetch_news("AAPL", process_news)
+    broker_news = Broker_Adapter()
+    #broker_news.fetch_news("AAPL", process_news)
 
     KAFKA_SERVER = f"{os.getenv('KAFKA_DOCKER_NAME')}:{os.getenv('KAFKA_PORT')}"
     TOPIC = os.getenv("MAIN_TOPIC")
