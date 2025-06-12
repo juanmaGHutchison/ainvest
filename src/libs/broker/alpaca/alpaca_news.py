@@ -1,11 +1,11 @@
-from alpaca.data.live import NewsStream
-from chatgpt import ChatGPT
+from alpaca_trade_api import Stream
 
 import asyncio
 
+# TODO: Use this class in the adapter
 class Alpaca_News:
     def __init__(self, api_key, api_secret):
-       self.news_stream = NewsStream(api_key, api_secret)
+       self.news_stream = Stream(api_key, api_secret)
 
     async def handle_news(news):
         # TODO: create DEEPSEEK and KAFKA classes
