@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
 
 from libs.broker.broker_adapter import Broker_Adapter
+from libs.queue.queue_adapter import Queue_Adapter
 
-from kafka import KafkaConsumer
-
-from dotenv import load_dotenv
-import os
 import json
 import numpy as np
 
@@ -13,49 +10,41 @@ from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
 
-def create_sequences(data, seq_length=60):
-    x, y = [], []
-    for i in range(seq_length, len(data)):
-        x.append(data[i - seq_length:i])
-        y.append(data[i])
-    return np.array(x), np.array(y)
+class Consumer:
+    def __init__(self):
+        self.broker = Broker_Adapter()
+        self.queue_consumer = Queue_Adapter()
 
-if __name__ == "__main__":
-    load_dotenv("config/kafka.env")
+        self.broker.init_historic_api()
+        self.queue_consumer.init_consumer()
 
-    KAFKA_SERVER = f"{os.getenv('KAFKA_DOCKER_NAME')}:{os.getenv('KAFKA_PORT')}"
-    TOPIC = os.getenv("MAIN_TOPIC")
+    def create_sequences(self, data, seq_length=60):
+        x, y = [], []
+        for i in range(seq_length, len(data)):
+            x.append(data[i - seq_length:i])
+            y.append(data[i])
+        return np.array(x), np.array(y)
 
-    broker = Broker_Adapter()
-    broker.init_historic_api()
-
-    consumer = KafkaConsumer(
-            bootstrap_servers=KAFKA_SERVER,
-            group_id = 'consumer-1',
-            auto_offset_reset = 'earliest'
-            )
-
-    # TODO: kafka adapter
-    consumer.subscribe([TOPIC])
-
-    for message in consumer:
+    # TODO: refactor
+    def consuming_action(self, message):
         print(f"Received: {message.value.decode('utf-8')}")
         message_json = json.loads(message.value.decode('utf-8'))
         ticker = message_json['ticker']
 
-        prices = broker.get_data_from_stock(ticker).values.reshape(-1, 1)
+        prices = self.broker.get_data_from_stock(ticker).values.reshape(-1, 1)
 
         scaler = MinMaxScaler()
         scaled_close_prices = scaler.fit_transform(prices)
 
-        x, y = create_sequences(scaled_close_prices, 60)
+        x, y = self.create_sequences(scaled_close_prices, 60)
         x = x.reshape(x.shape[0], x.shape[1], 1)
 
+        # TODO: Strategy pattern ?
         model = Sequential([
-                LSTM(50, return_sequences=True, input_shape=(60, 1)),
-                LSTM(50),
-                Dense(1)
-            ])
+            LSTM(50, return_sequences=True, input_shape=(60, 1)),
+            LSTM(50),
+            Dense(1)
+        ])
 
         model.compile(optimizer='adam', loss='mean_squared_error')
         model.fit(x, y , epochs=10, batch_size=16)
@@ -71,3 +60,11 @@ if __name__ == "__main__":
         future_prices = scaler.inverse_transform(np.array(future_preds))
         for i, price in enumerate(future_prices, 1):
             print(f"Day {i}: ${price[0]:.2f}")
+                
+    def start_consumer(self):
+        self.queue_consumer.start_consuming(self.consuming_action)
+
+if __name__ == "__main__":
+    consumer = Consumer()
+
+    consumer.start_consumer()

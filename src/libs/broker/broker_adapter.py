@@ -1,4 +1,3 @@
- 
 from libs.broker.broker_interface import Broker_Interface
 
 from libs.broker.alpaca.alpaca_news import Alpaca_News
