@@ -2,7 +2,7 @@ from libs.maths.strategy_interface import Strategy_Interface
 
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense
+from tensorflow.keras.layers import LSTM, Dense, Input
 
 import numpy as np
 
@@ -10,7 +10,7 @@ class LSTM_Strategy(Strategy_Interface):
     def __init__(self, n_days_predict):
         self.scaler = MinMaxScaler()
         self.model: Sequential
-        self.day_predict = n_days_predict
+        self.n_days_predict = n_days_predict
         self.x = []
         self.y = []
 
@@ -32,23 +32,23 @@ class LSTM_Strategy(Strategy_Interface):
         self.x = self.x.reshape(self.x.shape[0], self.x.shape[1], 1)
 
         self.model = Sequential([
-            LSTM(50, return_sequences=True, input_shape=(60, 1)),
-            LSTM(50),
+            Input(shape=(60, 1)),
+            LSTM(50, return_sequences=True),
             Dense(1)
         ])
 
         self.model.compile(optimizer='adam', loss='mean_squared_error')
         self.model.fit(self.x, self.y, epochs=10, batch_size=16)
 
-        last_seq = scaled_close_prices[-60].reshape(1, 60, 1)
+        last_seq = scaled_close_prices[-60:].reshape(1, 60, 1)
         future_preds = []
 
-        for _ in range(self.days_predict):
+        for _ in range(self.n_days_predict):
             next_scaled = self.model.predict(last_seq)[0][0]
             future_preds.append([next_scaled])
             last_seq = np.append(last_seq[:, 1:, :], [[next_scaled]], axis=1)
 
-        future_prices = self.scaler.inverse_transform(np.array(future_preds))
+        future_prices = self.scaler.inverse_transform(np.array(future_preds).reshape(-1,1))
         for i, price in enumerate(future_prices, 1):
             print(f"Day {i}: ${price[0]:.2f}")
         

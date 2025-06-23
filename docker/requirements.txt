@@ -6,5 +6,5 @@ kafka-python
 numpy
 scikit-learn
 pandas
-tensorflow
+tensorflow[and-cuda]
 
