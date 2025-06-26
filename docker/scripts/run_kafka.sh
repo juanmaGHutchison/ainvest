@@ -14,7 +14,7 @@ declare DOCKER_IMAGE_NAME="kafka_custom:latest"
 declare CONTAINER_NAME="kafka"
 declare CONTEXT="${BASH_SRC_rk}/.."
 declare DOCKERFILE_FILE="${BASH_SRC_rk}/../Dockerfile.kafka"
-declare DOCKER_KAFKA_NET="kafka-net"
+declare BROKER_DOCKER_NETWORK="broker-net"
 
 declare KAFKA_DOCKER_LOG="/tmp/kafka-logs"
 declare CLUSTER_ID
@@ -61,7 +61,7 @@ function init_cluster() {
 }
 
 function create_network() {
-    docker network create ${DOCKER_KAFKA_NET}
+    docker network create ${BROKER_DOCKER_NETWORK}
 }
 
 function run_kafka() {
@@ -70,7 +70,7 @@ function run_kafka() {
     chown -R 1000:1000 ${KAFKA_CLUSTER}
 
     # TODO do a controller node too.
-    docker run -dt --name ${CONTAINER_NAME} --network ${DOCKER_KAFKA_NET} -p 9092:9092 \
+    docker run -dt --name ${CONTAINER_NAME} --network ${BROKER_DOCKER_NETWORK} -p 9092:9092 \
         -v ${KAFKA_CLUSTER}:${KAFKA_DOCKER_LOG} \
         -e KAFKA_PROCESS_ROLES=broker,controller \
         -e KAFKA_NODE_ID=1 \
@@ -110,7 +110,7 @@ if [ -n "${RUN_KAFKA:-}" ]; then
     CLUSTER_ID="$(get_cluster_id)"
     init_cluster ${CLUSTER_ID}
 
-    if ! docker network ls --filter name=${DOCKER_KAFKA_NET} --format '{{.Name}}' | grep -wq ${DOCKER_KAFKA_NET}; then
+    if ! docker network ls --filter name=${BROKER_DOCKER_NETWORK} --format '{{.Name}}' | grep -wq ${BROKER_DOCKER_NETWORK}; then
         create_network
     fi
 

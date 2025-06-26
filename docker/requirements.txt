@@ -3,8 +3,8 @@ alpaca-trade-api
 python-dotenv
 python-dateutil
 kafka-python
+redis
 numpy
 scikit-learn
 pandas
 tensorflow[and-cuda]
-

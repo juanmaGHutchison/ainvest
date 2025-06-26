@@ -4,6 +4,9 @@ from kafka import KafkaConsumer
 
 from dotenv import load_dotenv
 from pathlib import Path
+
+import redis
+import hashlib
 import json
 import os
 
@@ -13,6 +16,12 @@ class Queue_Adapter(Queue_Interface):
         load_dotenv(dotenv_path.resolve())
         self.KAFKA_SERVER = f"{os.getenv('KAFKA_DOCKER_NAME')}:{os.getenv('KAFKA_PORT')}"
         self.TOPIC = os.getenv("MAIN_TOPIC")
+
+        self.redis_cache = redis.Redis(
+                host = os.getenv("REDIS_HOST"),
+                port = int(os.getenv("REDIS_PORT")),
+                db = 0
+            )
 
         self.producer: KafkaProducer
         self.consumer: KafkaConsumer
@@ -28,14 +37,20 @@ class Queue_Adapter(Queue_Interface):
                 bootstrap_servers=self.KAFKA_SERVER,
                 group_id = 'consumer-1',
                 auto_offset_reset = 'earliest',
-                enable_auto_commit = True
+                enable_auto_commit = False
                 )
 
     def start_consuming(self, what_to_do_func):
         self.consumer.subscribe([self.TOPIC])
 
         for message in self.consumer:
-            what_to_do_func(message)
+            message_value = message.value.decode('utf-8')
+            message_id = hashlib.sha256(message_value.encode()).hexdigest()
+
+            if not self.redis_cache.get(message_id):
+                self.consumer.commit()
+                self.redis_cache.setex(message_id, 86400, "1")
+                what_to_do_func(message)
 
     def send(self, data):
         self.producer.send(self.TOPIC, data)

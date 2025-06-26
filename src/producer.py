@@ -26,7 +26,7 @@ class Producer:
         # TODO: uncomment to retrieve real data and process it
         # self.broker.fetch_news('AAPL', self.process_news)
         # TODO: assemble the JSON message
-        dummy_good_message = {"ticker": "AAPL", "headline": "NEW Good news", "summary": "Summary of good news", "goal": 80}
+        dummy_good_message = {"ticker": "AAPL", "headline": "NEW 4 Good news", "summary": "Summary of good news", "goal": 80}
         dummy_bad_message = {"ticker": "AAPL", "headline": "NEW Bad news", "summary": "Summary of bad news", "goal": 10}
         
         self.queue_producer.send(dummy_good_message)

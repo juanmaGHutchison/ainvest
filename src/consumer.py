@@ -11,7 +11,7 @@ class Consumer:
         self.broker = Broker_Adapter()
         self.queue_consumer = Queue_Adapter()
         # TODO: load number 7 from dotenv(consumer.conf)
-        self.lstm = LSTM_Strategy(7)
+        self.lstm = LSTM_Strategy(120)
 
         self.broker.init_historic_api()
         self.queue_consumer.init_consumer()

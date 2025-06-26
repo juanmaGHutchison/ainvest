@@ -4,6 +4,7 @@ set -Eeuo pipefail
 ####### GLOBAL VARIABLES
 declare THIS_PATH="$(dirname ${BASH_SOURCE[0]})"
 declare DOCKER_IMAGE_NAME="alpaca:1.0"
+declare BROKER_DOCKER_NETWORK="broker-net"
 
 ####### FUNCTIONS
 function usage() {
@@ -48,7 +49,7 @@ if [ -n "${ALPACA_SCRIPT:-}" ]; then
 
     docker run -ti --rm \
         -v $(realpath $(dirname ${ALPACA_SCRIPT})):/app \
-        --network kafka-net \
+        --network ${BROKER_DOCKER_NETWORK} \
 	--gpus all --runtime=nvidia \
         ${DOCKER_IMAGE_NAME} \
         python3 $(basename ${ALPACA_SCRIPT})
