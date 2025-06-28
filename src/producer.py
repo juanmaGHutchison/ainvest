@@ -7,6 +7,9 @@ from dotenv import load_dotenv
 from pathlib import Path
 import os
 
+# Only for dummy data. When unnecessary, delete
+import random
+
 class Producer:
     def __init__(self):
         load_dotenv("config/producer.env")
@@ -26,7 +29,8 @@ class Producer:
         # TODO: uncomment to retrieve real data and process it
         # self.broker.fetch_news('AAPL', self.process_news)
         # TODO: assemble the JSON message
-        dummy_good_message = {"ticker": "AAPL", "headline": "NEW 4 Good news", "summary": "Summary of good news", "goal": 80}
+        rand_num = random.randint(0, 1000)
+        dummy_good_message = {"ticker": "AAPL", "headline": f"NEW {rand_num}  Good news", "summary": "Summary of good news", "goal": 80}
         dummy_bad_message = {"ticker": "AAPL", "headline": "NEW Bad news", "summary": "Summary of bad news", "goal": 10}
         
         self.queue_producer.send(dummy_good_message)

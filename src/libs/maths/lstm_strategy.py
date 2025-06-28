@@ -26,13 +26,14 @@ class LSTM_Strategy(Strategy_Interface):
         return np.array(self.x), np.array(self.y)
 
     def predict(self, data):
+        n_data_days_fetched = len(data) - 1
         scaled_close_prices = self.scaler.fit_transform(data)
 
-        self.x, self.y = self.create_sequences(scaled_close_prices, 60)
+        self.x, self.y = self.create_sequences(scaled_close_prices, n_data_days_fetched)
         self.x = self.x.reshape(self.x.shape[0], self.x.shape[1], 1)
 
         self.model = Sequential([
-            Input(shape=(60, 1)),
+            Input(shape=(n_data_days_fetched, 1)),
             LSTM(50, return_sequences=True),
             Dense(1)
         ])
@@ -40,7 +41,7 @@ class LSTM_Strategy(Strategy_Interface):
         self.model.compile(optimizer='adam', loss='mean_squared_error')
         self.model.fit(self.x, self.y, epochs=10, batch_size=16)
 
-        last_seq = scaled_close_prices[-60:].reshape(1, 60, 1)
+        last_seq = scaled_close_prices[-n_data_days_fetched:].reshape(1, n_data_days_fetched, 1)
         future_preds = []
 
         for _ in range(self.n_days_predict):

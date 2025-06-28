@@ -19,7 +19,7 @@ class Alpaca_Historic_Data(Alpaca_Session):
         # start = yesterday - timedelta(days=120),
         self.historic_data_params = StockTradesRequest(
                 symbol_or_symbols = ticker,
-                start = yesterday - timedelta(days=4),
+                start = yesterday - timedelta(days = n_days_ago),
                 end = yesterday
                 )
 

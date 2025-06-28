@@ -1,5 +1,6 @@
 alpaca-py
 alpaca-trade-api
+yfinance
 python-dotenv
 python-dateutil
 kafka-python
