@@ -1,11 +1,10 @@
-from alpaca_trade_api import Stream
-
+from libs.broker.alpaca.alpaca_session import Alpaca_Session
 import asyncio
 
-# TODO: Use this class in the adapter
-class Alpaca_News:
-    def __init__(self, api_key, api_secret):
-        self.broker = Stream(api_key, api_secret)
+class Alpaca_News(Alpaca_Session):
+    def __init__(self):
+        super().__init__()
+        self.init_alpaca_stream_session()
 
     def fetch_news(self, stock, process_func):
         self.broker.subscribe_news(process_func, stock)

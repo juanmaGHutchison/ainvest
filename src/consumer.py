@@ -16,7 +16,7 @@ class Consumer:
         self.broker.init_historic_api()
         self.queue_consumer.init_consumer()
 
-    def consuming_action(self, message):
+    def consuming_handler(self, message):
         print(f"Received: {message.value.decode('utf-8')}")
         message_json = json.loads(message.value.decode('utf-8'))
         ticker = message_json['ticker']
@@ -26,7 +26,7 @@ class Consumer:
         self.lstm.predict(prices)
                 
     def start_consumer(self):
-        self.queue_consumer.start_consuming(self.consuming_action)
+        self.queue_consumer.start_consuming(self.consuming_handler)
 
 if __name__ == "__main__":
     consumer = Consumer()

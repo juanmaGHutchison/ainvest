@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 
-from alpaca.data import StockHistoricalDataClient, StockTradesRequest
+from libs.broker.alpaca.alpaca_session import Alpaca_Session
+from alpaca.data import StockTradesRequest
 
 from datetime import datetime, timedelta
 
 import pandas as pd
 
-class Alpaca_Historic_Data:
-    def __init__(self, api_key, api_secret):
-        self.broker_historic = StockHistoricalDataClient(api_key, api_secret)
+class Alpaca_Historic_Data(Alpaca_Session):
+    def __init__(self):
+        super().__init__()
+        self.init_data_historic_client()
 
     def fetch_historic_from(self, n_days_ago, ticker):
         yesterday = datetime.today() - timedelta(days=1)

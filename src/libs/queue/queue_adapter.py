@@ -4,6 +4,7 @@ from kafka import KafkaConsumer
 
 from dotenv import load_dotenv
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
 
 import redis
 import hashlib
@@ -23,6 +24,8 @@ class Queue_Adapter(Queue_Interface):
                 db = 0
             )
 
+        self.executor: ThreadPoolExecutor
+
         self.producer: KafkaProducer
         self.consumer: KafkaConsumer
 
@@ -37,20 +40,29 @@ class Queue_Adapter(Queue_Interface):
                 bootstrap_servers=self.KAFKA_SERVER,
                 group_id = 'consumer-1',
                 auto_offset_reset = 'earliest',
-                enable_auto_commit = False
+                enable_auto_commit = False,
+                max_poll_interval_ms = 86400000, # 1 day
+                session_timeout_ms = 10000
                 )
+        self.executor = ThreadPoolExecutor(max_workers = os.cpu_count())
+    
+    def _handle_message(self, message, handler):
+        message_value = message.value.decode('utf-8')
+        message_id = hashlib.sha256(message_value.encode()).hexdigest()
 
-    def start_consuming(self, what_to_do_func):
+        if not self.redis_cache.get(message_id):
+            try:
+                self.consumer.commit()
+                self.redis_cache.setex(message_id, 86400, "1")
+                handler(message)
+            except Exception as e:
+                print(f"[ERROR] Processing failed: {e}")
+
+    def start_consuming(self, handler_function):
         self.consumer.subscribe([self.TOPIC])
 
         for message in self.consumer:
-            message_value = message.value.decode('utf-8')
-            message_id = hashlib.sha256(message_value.encode()).hexdigest()
-
-            if not self.redis_cache.get(message_id):
-                self.consumer.commit()
-                self.redis_cache.setex(message_id, 86400, "1")
-                what_to_do_func(message)
+            self.executor.submit(self._handle_message, message, handler_function) 
 
     def send(self, data):
         self.producer.send(self.TOPIC, data)
