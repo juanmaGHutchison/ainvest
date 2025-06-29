@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from libs.broker.broker_adapter import Broker_Adapter
+from libs.broker.broker_facade import Broker_Facade
 from libs.queue.queue_adapter import Queue_Adapter
 from libs.maths.lstm_strategy import LSTM_Strategy
 
@@ -8,10 +8,10 @@ import json
 
 class Consumer:
     def __init__(self):
-        self.broker = Broker_Adapter()
+        self.broker = Broker_Facade()
         self.queue_consumer = Queue_Adapter()
         # TODO: load number 7 from dotenv(consumer.conf)
-        self.lstm = LSTM_Strategy(120)
+        self.lstm = LSTM_Strategy(60)
 
         self.broker.init_historic_api()
         self.queue_consumer.init_consumer()

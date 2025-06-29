@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from libs.broker.broker_adapter import Broker_Adapter
+from libs.broker.broker_facade import Broker_Facade
 from libs.queue.queue_adapter import Queue_Adapter
 
 from dotenv import load_dotenv
@@ -14,7 +14,7 @@ class Producer:
     def __init__(self):
         load_dotenv("config/producer.env")
         
-        self.broker = Broker_Adapter()
+        self.broker = Broker_Facade()
         self.queue_producer = Queue_Adapter()
 
         self.queue_producer.init_producer()
