@@ -7,6 +7,9 @@ class Alpaca_News(Alpaca_Session):
         self.init_alpaca_stream_session()
 
     def fetch_news(self, stock, process_func):
-        self.broker.subscribe_news(process_func, stock)
+        async def handler(news):
+            await process_func(news)
+
+        self.broker.subscribe_news(handler, stock)
         self.broker.run()
 

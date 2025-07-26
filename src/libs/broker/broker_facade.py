@@ -20,8 +20,7 @@ class Broker_Facade(Broker_Interface):
         self.broker_trading = Alpaca_Trading()
 
     def fetch_news(self, stock, handler_function):
-        self.broker.subscribe_news(handler_function, stock)
-        self.broker.run()
+        self.broker_news.fetch_news(stock, handler_function)
 
     def get_data_from_stock(self, stock):
         # TODO: config file
