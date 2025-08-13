@@ -26,12 +26,14 @@ class Producer:
     def process_news(self, news):
         prompt = Prompt_Manager()
         self.llvm.send_prompt(prompt.prompt_to_json_input(news))
+        print("----------------------")
         print(news)
+        print("----------------------")
 
     def start_producing(self):
         # TODO: what can i do with stocks. Test * and look for other solutions
         # TODO: uncomment to retrieve real data and process it
-        self.broker.fetch_news('AAPL', self.process_news)
+        self.broker.fetch_news('*', self.process_news)
         # TODO: assemble the JSON message
         # rand_num = random.randint(0, 1000)
         # dummy_good_message = {"ticker": "AAPL", "headline": f"NEW {rand_num}  Good news", "summary": "Summary of good news", "goal": 80}

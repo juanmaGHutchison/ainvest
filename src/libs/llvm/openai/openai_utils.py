@@ -14,10 +14,10 @@ class OpenAI_Client:
                 api_key = os.getenv("OPENAI_API_KEY")
                 )
 
-    def promt_to_chatgpt(self, prompt):
+    def prompt_to_chatgpt(self, prompt):
         # TODO: put temperature and top_p in dotenv
         response = self.openai_client.chat.completions.create(
-                message = prompt,
+                messages = [{"role": "user", "content": prompt}],
                 temperature = 0.7,
                 top_p = 1.0,
                 model = "openai/gpt-4.1"

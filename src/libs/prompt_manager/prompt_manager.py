@@ -11,7 +11,7 @@ class Prompt_Manager:
         self.out_json_format = os.getenv("P_OUT_JSON_FORMAT")
 
     def prompt_to_json_input(self, in_json):
-        return self.prompt_tpl % (input_json, self.out_json_format)
+        return self.prompt_tpl % (in_json, self.out_json_format)
 
     def prompt_to_string(self, out_json):
         # TODO
