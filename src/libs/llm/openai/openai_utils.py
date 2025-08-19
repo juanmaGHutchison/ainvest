@@ -20,7 +20,7 @@ class OpenAI_Client:
                 messages = [{"role": "user", "content": prompt}],
                 temperature = 0.7,
                 top_p = 1.0,
-                model = "openai/gpt-4.1"
+                model = "gpt-4o-mini"
                 )
 
         return response.choices[0].message.content.strip()

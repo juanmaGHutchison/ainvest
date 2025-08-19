@@ -1,7 +1,7 @@
-from libs.llvm.llvm_interface import LLVM_Interface
-from libs.llvm.openai.openai_utils import OpenAI_Client
+from libs.llm.llm_interface import LLM_Interface
+from libs.llm.openai.openai_utils import OpenAI_Client
 
-class LLVM_Facade(LLVM_Interface):
+class LLM_Facade(LLM_Interface):
     def __init__(self):
         self.openai_client = OpenAI_Client()
 
