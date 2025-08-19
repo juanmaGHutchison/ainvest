@@ -42,19 +42,20 @@ class Queue_Adapter(Queue_Interface):
                 auto_offset_reset = 'earliest',
                 enable_auto_commit = False,
                 max_poll_interval_ms = 86400000, # 1 day
-                session_timeout_ms = 10000
+                session_timeout_ms = 10000,
+                value_deserializer=lambda v: json.loads(v.decode("utf-8"))
                 )
         self.executor = ThreadPoolExecutor(max_workers = os.cpu_count())
     
     def _handle_message(self, message, handler):
-        message_value = message.value.decode('utf-8')
-        message_id = hashlib.sha256(message_value.encode()).hexdigest()
+        message_raw = message.value
+        message_id = hashlib.sha256(message_raw.encode("utf-8")).hexdigest()
 
         if not self.redis_cache.get(message_id):
             try:
                 self.consumer.commit()
                 self.redis_cache.setex(message_id, 86400, "1")
-                handler(message)
+                handler(json.loads(message_raw))
             except Exception as e:
                 print(f"[ERROR] Processing failed: {e}")
 

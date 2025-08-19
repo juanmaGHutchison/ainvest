@@ -17,9 +17,8 @@ class Consumer:
         self.queue_consumer.init_consumer()
 
     def consuming_handler(self, message):
-        print(f"Received: {message.value.decode('utf-8')}")
-        message_json = json.loads(message.value.decode('utf-8'))
-        ticker = message_json['ticker']
+        print(f"RECEIVED - {message}")
+        ticker = message['ticker']
 
         prices = self.broker.get_data_from_stock(ticker).values.reshape(-1, 1)
 
