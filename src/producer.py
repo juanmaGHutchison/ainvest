@@ -23,9 +23,8 @@ class Producer:
     def process_news(self, news):
         prompt = Prompt_Manager()
         llm_response = self.llm.send_prompt(prompt.prompt_to_json_input(news))
-        print(f"SEND: {llm_response}")
+        print({llm_response})
         self.queue_producer.send(llm_response)
-        
 
     def start_producing(self):
         self.broker.fetch_news('*', self.process_news)

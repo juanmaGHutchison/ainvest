@@ -17,7 +17,7 @@ declare DOCKERFILE_PRODUCER="${DOCKER_PATH}/Dockerfile.producer"
 declare CONSUMER_SCRIPT="${SRC_PATH}/consumer.py"
 declare CONSUMER_IMAGE_NAME="consumer:${DOCKER_VERSION_APP}"
 declare CONSUMER_CONTAINER_NAME="consumer-$(echo $RANDOM)"
-declare CONSUMER_BASE_IMAGE="nvidia/cuda:12.2.2-cudnn8-runtime-ubuntu22.04"
+declare CONSUMER_BASE_IMAGE="tensorflow/tensorflow:2.15.0-gpu"
 declare DOCKERFILE_CONSUMER="${DOCKER_PATH}/Dockerfile.consumer"
 
 declare IMAGE_BASE_OUTPUT_NAME="bot_base_image:${DOCKER_VERSION_APP}"

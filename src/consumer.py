@@ -17,11 +17,9 @@ class Consumer:
         self.queue_consumer.init_consumer()
 
     def consuming_handler(self, message):
-        print(f"RECEIVED - {message}")
         ticker = message['ticker']
-
         prices = self.broker.get_data_from_stock(ticker).values.reshape(-1, 1)
-
+        print(f"TICKER - {ticker}")
         self.lstm.predict(prices)
                 
     def start_consumer(self):

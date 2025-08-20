@@ -55,7 +55,7 @@ class Queue_Adapter(Queue_Interface):
             try:
                 self.consumer.commit()
                 self.redis_cache.setex(message_id, 86400, "1")
-                handler(json.loads(message_raw))
+                handler(json.loads(message_raw, strict=False))
             except Exception as e:
                 print(f"[ERROR] Processing failed: {e}")
 
