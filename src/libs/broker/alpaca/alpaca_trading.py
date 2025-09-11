@@ -9,10 +9,10 @@ class Alpaca_Trading(Alpaca_Session):
         # TODO: Leave default value when no Paper Account
         self.init_alpaca_trading_client(is_paper = True)
 
-    def buy_stock(self, in_symbol, in_notional, in_limit_price):
+    def buy_stock(self, in_symbol, in_qty, in_limit_price):
         sell_order = LimitOrderRequest(
                 symbol = in_symbol,
-                notional = in_notional,
+                qty = in_qty,
                 side = OrderSide.BUY,
                 limit_price = in_limit_price,
                 time_in_force = TimeInForce.GTC

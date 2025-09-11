@@ -27,5 +27,5 @@ class Broker_Facade(Broker_Interface):
         n_days_ago = 90
         return self.broker_historic.fetch_historic_prices_from(n_days_ago, stock)
 
-    def buy_stock(self, symbol, notional, limit_price):
-       self.broker_trading.buy_stock(symbol, notional, limit_price) 
+    def buy_stock(self, symbol, qty, limit_price):
+       self.broker_trading.buy_stock(symbol, qty, limit_price) 

@@ -49,8 +49,8 @@ class LSTM_Strategy(Strategy_Interface):
             future_preds.append([next_scaled])
             last_seq = np.append(last_seq[:, 1:, :], [[next_scaled]], axis=1)
 
-        future_prices = self.scaler.inverse_transform(np.array(future_preds).reshape(-1,1))
-        for i, price in enumerate(future_prices, 1):
-            print(f"Day {i}: ${price[0]:.2f}")
-        
+        return self.scaler.inverse_transform(np.array(future_preds).reshape(-1,1))
+
+    def get_max_prediction(self, data):
+        return np.argmax(data)
 

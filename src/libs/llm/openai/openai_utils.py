@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 from pathlib import Path
 import os
 
+# TODO: Max length of 8000 characters (input)
+
 class OpenAI_Client:
     def __init__(self):
         dotenv_path = Path(__file__).parent / "conf/openai.env"
@@ -20,7 +22,7 @@ class OpenAI_Client:
                 messages = [{"role": "user", "content": prompt}],
                 temperature = 0.7,
                 top_p = 1.0,
-                model = "gpt-4o-mini"
+                model = "gpt-4.1-mini"
                 )
 
         return response.choices[0].message.content.strip()

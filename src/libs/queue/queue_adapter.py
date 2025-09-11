@@ -66,6 +66,10 @@ class Queue_Adapter(Queue_Interface):
             self.executor.submit(self._handle_message, message, handler_function) 
 
     def send(self, data):
-        self.producer.send(self.TOPIC, data)
-        self.producer.flush()
+        data_to_json = json.loads(data)
+
+        # TODO: put threshold in config file
+        if data_to_json["score"] > 75:
+            self.producer.send(self.TOPIC, data)
+            self.producer.flush()
 

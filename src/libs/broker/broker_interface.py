@@ -23,5 +23,5 @@ class Broker_Interface(ABC):
         pass
 
     @abstractmethod
-    def buy_stock(symbol, notional, limit_price):
+    def buy_stock(symbol, qty, limit_price):
         pass

@@ -24,5 +24,9 @@ class Alpaca_Session:
         self.broker = Stream(self.api_key, self.api_secret)
 
     def init_alpaca_trading_client(self, is_paper = False):
-        self.broker_trading = TradingClient(self.api_key, self.api_secret, is_paper)
+        self.broker_trading = TradingClient(
+                api_key = self.api_key,
+                secret_key = self.api_secret,
+                paper = is_paper
+            )
 
