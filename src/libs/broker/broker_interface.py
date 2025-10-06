@@ -23,5 +23,9 @@ class Broker_Interface(ABC):
         pass
 
     @abstractmethod
-    def buy_stock(symbol, qty, limit_price):
+    def buy_stock(symbol, latest_value, in_limit_price):
+        pass
+
+    @abstractmethod
+    def is_whitelist(symbol, in_symbol):
         pass

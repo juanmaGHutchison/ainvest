@@ -15,8 +15,6 @@ class Alpaca_Historic_Data(Alpaca_Session):
     def fetch_historic_from(self, n_days_ago, ticker):
         yesterday = datetime.today() - timedelta(days=1)
 
-        # TODO: paralelize in windows of X days
-        # start = yesterday - timedelta(days=120),
         self.historic_data_params = StockTradesRequest(
                 symbol_or_symbols = ticker,
                 start = yesterday - timedelta(days = n_days_ago),
@@ -38,5 +36,4 @@ class Alpaca_Historic_Data(Alpaca_Session):
         dataframe.sort_index(inplace = True)
 
         return dataframe['price']
-
 

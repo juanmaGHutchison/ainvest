@@ -4,8 +4,6 @@ from libs.broker.broker_facade import Broker_Facade
 from libs.queue.queue_adapter import Queue_Adapter
 from libs.maths.lstm_strategy import LSTM_Strategy
 
-import json
-
 class Consumer:
     def __init__(self):
         self.broker = Broker_Facade()
@@ -20,11 +18,13 @@ class Consumer:
     def consuming_handler(self, message):
         ticker = message['ticker']
         prices = self.broker.get_data_from_stock(ticker).values.reshape(-1, 1)
-        print(f"TICKER - {ticker}")
+        print(f"Current {ticker} share price: {prices[-1]}")
         prices = self.lstm.predict(prices)
-        # TODO: Calculate quantity 
+        print(f"After LSTM prediction: {prices[-1]}")
         day_max_price = self.lstm.get_max_prediction(prices)
-        self.broker.buy_stock(ticker, 1, day_max_price)
+        latest_price = float(prices[-1].item())
+        self.broker.buy_stock(ticker, latest_price, day_max_price)
+        print("--------------------------")
                 
     def start_consumer(self):
         self.queue_consumer.start_consuming(self.consuming_handler)

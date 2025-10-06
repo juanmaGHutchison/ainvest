@@ -3,12 +3,20 @@ from libs.broker.broker_interface import Broker_Interface
 from libs.broker.alpaca.alpaca_news import Alpaca_News
 from libs.broker.yahoo_finance.yahoo_finance_historic_data import Yahoo_Historic_Data
 from libs.broker.alpaca.alpaca_trading import Alpaca_Trading
+from libs.broker.alpaca.alpaca_stock_list import Alpaca_Stock_List
+
+from math import floor
 
 class Broker_Facade(Broker_Interface):
     def __init__(self):
         self.broker_news: Alpaca_News
         self.broker_historic: Yahoo_Historic_Data
         self.broker_trading: Alpaca_Trading
+        self.broker_stock_list: Alpaca_Stock_List
+
+        # TODO: put in config file
+        # This is the money to spend as base. If operation is very good, more will be spent
+        self.base_investment = 5
 
     def init_news_api(self):
         self.broker_news = Alpaca_News()
@@ -19,6 +27,9 @@ class Broker_Facade(Broker_Interface):
     def init_trading_api(self):
         self.broker_trading = Alpaca_Trading()
 
+    def init_stock_list_api(self):
+        self.broker_stock_list = Alpaca_Stock_List()
+
     def fetch_news(self, stock, handler_function):
         self.broker_news.fetch_news(stock, handler_function)
 
@@ -27,5 +38,32 @@ class Broker_Facade(Broker_Interface):
         n_days_ago = 90
         return self.broker_historic.fetch_historic_prices_from(n_days_ago, stock)
 
-    def buy_stock(self, symbol, qty, limit_price):
-       self.broker_trading.buy_stock(symbol, qty, limit_price) 
+    def buy_stock(self, symbol, latest_value, in_limit_price):
+        gap_of_goodness = (in_limit_price - latest_value) / latest_value
+        investment = self.base_investment * (1 + gap_of_goodness)
+        balance = float(self.broker_trading.get_current_balance())
+
+        qty = max(floor(investment/latest_value), 1) 
+        total_cost = (qty * latest_value)
+
+        has_cash = balance >= total_cost
+        worthwhile_operation = qty >= 1
+
+        if has_cash and worthwhile_operation:
+            print("-> Operation parameters:")
+            print(f"LIMIT_PRICE: {in_limit_price}")
+            print(f"LATEST_PRICE: {latest_value}")
+            
+            self.broker_trading.buy_sell_stock(symbol, qty, in_limit_price)
+        else:
+            # TODO: Use log files
+            if not has_cash:
+                print (f"⚠️  Account balance is {balance} and investment requires {total_cost}€. Ignoring operation")
+            if not worthwhile_operation:
+                print (f"QTY to sell will be less than 1. This operation is worthless")
+
+    def is_whitelist(self, in_symbol):
+        whitelist = self.broker_stock_list.get_whitelist()
+
+        return in_symbol in whitelist
+
