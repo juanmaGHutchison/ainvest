@@ -3,16 +3,22 @@ from libs.broker.broker_interface import Broker_Interface
 from libs.broker.alpaca.alpaca_news import Alpaca_News
 from libs.broker.yahoo_finance.yahoo_finance_historic_data import Yahoo_Historic_Data
 from libs.broker.alpaca.alpaca_trading import Alpaca_Trading
-from libs.broker.alpaca.alpaca_stock_list import Alpaca_Stock_List
 
 from math import floor
+from dotenv import load_dotenv
+from pathlib import Path
+import os
 
 class Broker_Facade(Broker_Interface):
     def __init__(self):
+        dotenv_path = Path(__file__).parent / "conf/broker.env"
+        load_dotenv(dotenv_path.resolve())
+        self.blacklist = os.getenv("BLACKLIST", "")
+        self.blacklist = [s.strip().upper() for s in self.blacklist.split(",") if s.strip()]
+
         self.broker_news: Alpaca_News
         self.broker_historic: Yahoo_Historic_Data
         self.broker_trading: Alpaca_Trading
-        self.broker_stock_list: Alpaca_Stock_List
 
         # TODO: put in config file
         # This is the money to spend as base. If operation is very good, more will be spent
@@ -26,9 +32,6 @@ class Broker_Facade(Broker_Interface):
 
     def init_trading_api(self):
         self.broker_trading = Alpaca_Trading()
-
-    def init_stock_list_api(self):
-        self.broker_stock_list = Alpaca_Stock_List()
 
     def fetch_news(self, stock, handler_function):
         self.broker_news.fetch_news(stock, handler_function)
@@ -62,8 +65,11 @@ class Broker_Facade(Broker_Interface):
             if not worthwhile_operation:
                 print (f"QTY to sell will be less than 1. This operation is worthless")
 
-    def is_whitelist(self, in_symbol):
-        whitelist = self.broker_stock_list.get_whitelist()
+    def is_blacklisted(self, symbols):
+        if isinstance(symbols, str):
+            symbols = [symbols]
+        elif not symbols:
+            symbols = []
 
-        return in_symbol in whitelist
+        return any(symbol.upper() in self.blacklist for symbol in symbols)
 

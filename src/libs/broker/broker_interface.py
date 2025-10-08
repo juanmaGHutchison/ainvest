@@ -27,5 +27,5 @@ class Broker_Interface(ABC):
         pass
 
     @abstractmethod
-    def is_whitelist(symbol, in_symbol):
+    def is_blacklisted(symbol, symbols):
         pass
