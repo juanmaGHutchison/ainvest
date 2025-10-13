@@ -14,7 +14,8 @@ class Broker_Facade(Broker_Interface):
         dotenv_path = Path(__file__).parent / "conf/broker.env"
         load_dotenv(dotenv_path.resolve())
         self.blacklist = os.getenv("BLACKLIST", "")
-        self.blacklist = [s.strip().upper() for s in self.blacklist.split(",") if s.strip()]
+        self.blacklist = [s.strip() for s in self.blacklist.split(",") if s.strip()]
+        self.blacklist = [s.upper() for s in self.blacklist]
 
         self.broker_news: Alpaca_News
         self.broker_historic: Yahoo_Historic_Data
@@ -41,23 +42,19 @@ class Broker_Facade(Broker_Interface):
         n_days_ago = 90
         return self.broker_historic.fetch_historic_prices_from(n_days_ago, stock)
 
-    def buy_stock(self, symbol, latest_value, in_limit_price):
-        gap_of_goodness = (in_limit_price - latest_value) / latest_value
+    def buy_stock(self, symbol, latest_value, target_price, stop_loss_price):
+        gap_of_goodness = (target_price - latest_value) / latest_value
         investment = self.base_investment * (1 + gap_of_goodness)
         balance = float(self.broker_trading.get_current_balance())
 
         qty = max(floor(investment/latest_value), 1) 
-        total_cost = (qty * latest_value)
+        total_cost = qty * latest_value
 
         has_cash = balance >= total_cost
         worthwhile_operation = qty >= 1
 
         if has_cash and worthwhile_operation:
-            print("-> Operation parameters:")
-            print(f"LIMIT_PRICE: {in_limit_price}")
-            print(f"LATEST_PRICE: {latest_value}")
-            
-            self.broker_trading.buy_sell_stock(symbol, qty, in_limit_price)
+            self.broker_trading.buy_sell_stock(symbol, qty, target_price, stop_loss_price)
         else:
             # TODO: Use log files
             if not has_cash:
@@ -71,5 +68,5 @@ class Broker_Facade(Broker_Interface):
         elif not symbols:
             symbols = []
 
-        return any(symbol.upper() in self.blacklist for symbol in symbols)
+        return any(symbol in self.blacklist for symbol in symbols)
 

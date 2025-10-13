@@ -69,7 +69,7 @@ class Queue_Adapter(Queue_Interface):
         data_to_json = json.loads(data)
 
         # TODO: put threshold in config file
-        if data_to_json["score"] > 75:
+        if data_to_json["score"] > 70:
             self.producer.send(self.TOPIC, data)
             self.producer.flush()
 

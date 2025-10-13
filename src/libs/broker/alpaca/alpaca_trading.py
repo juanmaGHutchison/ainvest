@@ -19,24 +19,19 @@ class Alpaca_Trading(Alpaca_Session):
         
         return latest_trade[symbol].price
 
-    def buy_sell_stock(self, symbol, investment, take_profit_price):
-        current_price = self._get_current_trade(symbol)
-        # TODO: put in config file
-        stop_loss_price = round(current_price * 0.8, 2)
-        print(f"STOP-LOSS: {stop_loss_price}")
-
+    def buy_sell_stock(self, symbol, qty, target_price, stop_loss_price):
         order_request = MarketOrderRequest(
                 symbol = symbol,
-                qty = investment,
+                qty = qty,
                 side = OrderSide.BUY,
                 time_in_force = TimeInForce.DAY,
                 order_class = OrderClass.BRACKET,
-                take_profit = {"limit_price": round(take_profit_price, 2)},
-                stop_loss = {"stop_price": round(stop_loss_price, 2)} if stop_loss_price else None
+                take_profit = {"limit_price": round(target_price, 2)},
+                stop_loss = {"stop_price": round(stop_loss_price, 2)}
             )
 
         order = self.broker_trading.submit_order(order_data = order_request)
-        print(f"Order performed. INvested: {investment}")
+        print(f"Order performed. Invested: {qty}")
 
     def get_current_balance(self):
         return self.broker_trading.get_account().cash

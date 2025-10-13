@@ -23,7 +23,7 @@ class Broker_Interface(ABC):
         pass
 
     @abstractmethod
-    def buy_stock(symbol, latest_value, in_limit_price):
+    def buy_stock(symbol, latest_value, target_price, stop_loss_price):
         pass
 
     @abstractmethod
