@@ -70,3 +70,13 @@ class Broker_Facade(Broker_Interface):
 
         return any(symbol in self.blacklist for symbol in symbols)
 
+    def is_already_open(self, symbols):
+        active_symbols = self.broker_trading.get_active_symbols()
+
+        if isinstance(symbols, str):
+            symbols = [symbols]
+        elif not symbols:
+            symbols = []
+
+        return any(sym in active_symbols for sym in symbols)
+

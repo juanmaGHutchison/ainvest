@@ -3,6 +3,7 @@ from libs.broker.alpaca.alpaca_session import Alpaca_Session
 from alpaca.trading.requests import LimitOrderRequest, MarketOrderRequest
 from alpaca.trading.enums import OrderSide, OrderClass, TimeInForce
 from alpaca.data.requests import StockLatestTradeRequest
+from alpaca.trading.requests import GetOrdersRequest
 
 import time
 
@@ -35,3 +36,14 @@ class Alpaca_Trading(Alpaca_Session):
 
     def get_current_balance(self):
         return self.broker_trading.get_account().cash
+
+    def get_active_symbols(self):
+        current_positions = self.broker_trading.get_all_positions()
+        current_orders = self.broker_trading.get_orders(
+                GetOrdersRequest(status='open', limit = 100)
+                )
+
+        active_positions = {pos.symbol.upper() for pos in current_positions}
+        active_orders = {order.symbol.upper() for order in current_orders}
+        
+        return active_positions.union(active_orders)

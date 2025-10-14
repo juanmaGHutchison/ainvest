@@ -27,5 +27,9 @@ class Broker_Interface(ABC):
         pass
 
     @abstractmethod
-    def is_blacklisted(symbol, symbols):
+    def is_blacklisted(self, symbols):
+        pass
+
+    @abstractmethod
+    def is_already_open(self, symbols):
         pass
