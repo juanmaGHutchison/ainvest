@@ -25,14 +25,14 @@ class Alpaca_Trading(Alpaca_Session):
                 symbol = symbol,
                 qty = qty,
                 side = OrderSide.BUY,
-                time_in_force = TimeInForce.DAY,
+                time_in_force = TimeInForce.GTC,
                 order_class = OrderClass.BRACKET,
                 take_profit = {"limit_price": round(target_price, 2)},
                 stop_loss = {"stop_price": round(stop_loss_price, 2)}
             )
 
         order = self.broker_trading.submit_order(order_data = order_request)
-        print(f"Order performed. Invested: {qty}")
+        print(f"Order performed. Invested(qty): {qty}")
 
     def get_current_balance(self):
         return self.broker_trading.get_account().cash

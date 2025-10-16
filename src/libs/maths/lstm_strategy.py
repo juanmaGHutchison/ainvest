@@ -37,8 +37,7 @@ class LSTM_Strategy(Strategy_Interface):
         self.model.fit(x, y, epochs=50, batch_size=32, verbose=0)
 
     def predict(self, data):
-        if self.model is None:
-            self._train(data)
+        self._train(data)
 
         scaled = self.scaler.transform(data)
         last_seq = scaled[-self.seq_len:].reshape(1, self.seq_len, 1)
