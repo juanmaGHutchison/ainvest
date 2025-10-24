@@ -21,7 +21,7 @@ class Consumer:
         ticker = message['ticker']
         prices = self.broker.get_data_from_stock(ticker).values.reshape(-1, 1)
         latest_price = float(prices[-1].item())
-        # TODO: put 0.6 in config file. I.E. Close OP if 40% loss
+        # TODO: put 0.9 in config file. I.E. Close OP if 10% loss
         stop_loss_price = latest_price * 0.9
         print(f"Current {ticker} share price: {latest_price}")
         print(f"Stop loss price: {stop_loss_price}")

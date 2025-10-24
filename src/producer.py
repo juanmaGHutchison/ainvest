@@ -32,12 +32,16 @@ class Producer:
 
     def process_news(self, news):
         if self._pre_filter(news):
-            llm_response = self.llm.send_prompt(
-                    self.prompt.prompt_to_json_input(news)
-                    )
-            print({llm_response})
+            try:
+                llm_response = self.llm.send_prompt(
+                        self.prompt.prompt_to_json_input(news)
+                        )
+                print({llm_response})
 
-            self.queue_producer.send(llm_response)
+                self.queue_producer.send(llm_response)
+            except LLM_Facade.Model_Rate_Limit as e:
+                print(f"[ERROR] {e}")
+                self.llm.failover_model()
 
     def start_producing(self):
         self.broker.fetch_news('*', self.process_news)

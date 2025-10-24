@@ -22,7 +22,7 @@ class Alpaca_Session:
         self.broker_historic = StockHistoricalDataClient(self.api_key, self.api_secret)
 
     def init_alpaca_stream_session(self):
-        self.broker = Stream(self.api_key, self.api_secret)
+        self.broker = Stream(self.api_key, self.api_secret, websocket_params={"open_timeout": 50})
 
     def init_alpaca_trading_client(self, is_paper = False):
         self.broker_trading = TradingClient(

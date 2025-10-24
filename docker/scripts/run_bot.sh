@@ -3,7 +3,8 @@
 set -Eeuo pipefail
 ####### GLOBAL VARIABLES
 declare THIS_PATH="$(dirname ${BASH_SOURCE[0]})"
-declare SRC_PATH="${THIS_PATH}/../../src"
+declare ROOT_PROJECT_PATH="${THIS_PATH}/../.."
+declare SRC_PATH="${ROOT_PROJECT_PATH}/src"
 declare DOCKER_PATH="${THIS_PATH}/.."
 declare BROKER_DOCKER_NETWORK="broker-net"
 declare DOCKER_VERSION_APP="beta"
@@ -22,6 +23,8 @@ declare DOCKERFILE_CONSUMER="${DOCKER_PATH}/Dockerfile.consumer"
 
 declare IMAGE_BASE_OUTPUT_NAME="bot_base_image:${DOCKER_VERSION_APP}"
 declare DOCKERFILE_BASE="${DOCKER_PATH}/Dockerfile.common"
+
+declare PERSISTENCE_PATH="$(realpath ${ROOT_PROJECT_PATH}/persistence)"
 
 ####### FUNCTIONS
 function usage() {
@@ -92,6 +95,8 @@ if [ -n "${BUILD_DOCKER_IMAGE:-}" ]; then
 else
     docker run -ti --rm \
         -v $(realpath $(dirname ${RUNNING_SCRIPT})):/app \
+	-v ${PERSISTENCE_PATH}:${PERSISTENCE_PATH} \
+	-e AINVEST_PERSISTENT_DIR=${PERSISTENCE_PATH} \
 	--name ${DOCKER_CONTAINER_NAME} \
         --network ${BROKER_DOCKER_NETWORK} \
 	${DOCKER_ADDITIONAL_PARAMS:-} \
