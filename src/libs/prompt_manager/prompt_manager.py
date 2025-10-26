@@ -17,7 +17,11 @@ class Prompt_Manager:
                 )
 
     def prompt_to_json_input(self, in_json):
-        return self.prompt_tpl % (in_json, self.out_json_format)
+        filter_json = self.prompt_tpl % (in_json, self.out_json_format)
+        filter_json = filter_json.encode("utf-8", "replace").decode("unicode_escape")
+        filter_json = filter_json.replace("\xa0", " ")
+
+        return filter_json
 
     def is_positive_news(self, news):
         result = self.sentiment_pipeline(news.headline)[0]
