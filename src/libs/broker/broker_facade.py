@@ -13,6 +13,7 @@ class Broker_Facade(Broker_Interface):
     def __init__(self):
         dotenv_path = Path(__file__).parent / "conf/broker.env"
         load_dotenv(dotenv_path.resolve())
+        self.invest_threshold = float(os.getenv("MAX_INVEST", 0.))
         self.blacklist = os.getenv("BLACKLIST", "")
         self.blacklist = [s.strip() for s in self.blacklist.split(",") if s.strip()]
         self.blacklist = [s.upper() for s in self.blacklist]
@@ -79,4 +80,20 @@ class Broker_Facade(Broker_Interface):
             symbols = []
 
         return any(sym in active_symbols for sym in symbols)
+
+    def is_under_threshold_invest(self, symbols):
+        omit_operation = False
+
+        try:
+            for symbol in symbols:
+                latest_symbol_price = self.broker_trading.get_latest_price(symbol)
+                omit_operation = latest_symbol_price > self.invest_threshold
+                if (omit_operation):
+                    print(f"[DEBUG] {symbol} price {latest_symbol_price} is greater than configured invest threshold {self.invest_threshold}")
+                    break
+
+            return omit_operation
+        except Alpaca_Trading.TickerPriceUnknownError as e:
+            print(f"[WARN] {e}. Cowardly ommitting operation")
+            return False
 

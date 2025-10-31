@@ -1,4 +1,4 @@
-from openai import OpenAI, RateLimitError
+from openai import OpenAI, RateLimitError, BadRequestError, APIError
 
 from dotenv import load_dotenv
 from pathlib import Path
@@ -11,17 +11,17 @@ ONE_DAY = 86400
 ONE_HOUR = 3600
 ONE_MINUTE = 60
 
-# TODO: Max length of 8000 characters (input)
-class OpenAI_Rate_Limit(Exception):
-    def __init__(self, model_name, retry_after = None):
-        msg = f"Model {model_name} is rate-limited"
-
-        if retry_after is not None:
-            msg += f", retry after {retry_after} seconds"
-
-        super().__init__(msg)
-
 class OpenAI_Client:
+    # TODO: Max length of 8000 characters (input)
+    class OpenAI_Rate_Limit(Exception):
+        def __init__(self, model_name, retry_after = None):
+            msg = f"Model {model_name} is rate-limited"
+
+            if retry_after is not None:
+                msg += f", retry after {retry_after} seconds"
+
+            super().__init__(msg)
+
     def __init__(self):
         dotenv_path = Path(__file__).parent / "conf/openai.env"
         load_dotenv(dotenv_path.resolve())
@@ -114,6 +114,16 @@ class OpenAI_Client:
                     )
 
             return response.choices[0].message.content.strip()
+        except BadRequestError as e:
+            err_msg = str(e)
+            if 'content_filter' in err_msg:
+                print("[WARN] OpenAI content moderation filetered the response. Prompt ignored")
+            else:
+                print(f"[ERROR] OpenAI BadRequestError: {err_msg}")
+            return None
         except RateLimitError as e:
             raise OpenAI_Rate_Limit(self.current_openai_model)
+        except APIError as e:
+            print(f"[ERROR] OpenAI API error: {e}")
+            return None
 

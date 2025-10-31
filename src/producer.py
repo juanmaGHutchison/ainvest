@@ -20,28 +20,29 @@ class Producer:
         is_positive_news = self.prompt.is_positive_news(news)
         is_not_blacklist = not self.broker.is_blacklisted(news.symbols)
         is_not_opened = not self.broker.is_already_open(news.symbols)
+        is_under_threshold_invest = self.broker.is_under_threshold_invest(news.symbols)
 
         if (not is_positive_news):
-            print(f"Omit {news.symbols} because of Negative news")
+            print(f"[DEBUG] Skipping news for {news.symbols}: Negative news")
         if (not is_not_blacklist):
-            print(f"Omit {news.symbols} because it is Blacklisted")
+            print(f"[DEBUG] Skipping news for {news.symbols}: Blacklisted")
         if (not is_not_opened):
-            print(f"Omit {news.symbols} because Symbol has already an open operation")
+            print(f"[DEBUG] Skipping news for {news.symbols}: Symbol has already an open operation")
+        if (is_under_threshold_invest):
+            print(f"[DEBUG] Skipping news for {news.symbols}: Price of a share is more expensive than configured threshold in app")
 
-        return is_positive_news and is_not_blacklist and is_not_opened
+        return is_positive_news and is_not_blacklist and is_not_opened and not is_under_threshold_invest
 
     def process_news(self, news):
         if self._pre_filter(news):
-            try:
-                llm_response = self.llm.send_prompt(
-                        self.prompt.prompt_to_json_input(news)
-                        )
-                print({llm_response})
+            llm_response = self.llm.send_prompt(
+                    self.prompt.prompt_to_json_input(news)
+                    )
+            print({llm_response})
 
-                self.queue_producer.send(llm_response)
-            except LLM_Facade.Model_Rate_Limit as e:
-                print(f"[ERROR] {e}")
-                self.llm.failover_model()
+            self.queue_producer.send(llm_response)
+        else:
+            print(f"[INFO] Skipping news for {news.symbols}: did not pass pre-filters") 
 
     def start_producing(self):
         self.broker.fetch_news('*', self.process_news)

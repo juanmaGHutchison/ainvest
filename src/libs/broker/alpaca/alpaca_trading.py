@@ -4,21 +4,23 @@ from alpaca.trading.requests import LimitOrderRequest, MarketOrderRequest
 from alpaca.trading.enums import OrderSide, OrderClass, TimeInForce
 from alpaca.data.requests import StockLatestTradeRequest
 from alpaca.trading.requests import GetOrdersRequest
+from alpaca.common.exceptions import APIError
 
 import time
+import requests
 
 class Alpaca_Trading(Alpaca_Session):
+    class TickerPriceUnknownError(Exception):
+        def __init__(self, symbol, message = None):
+            msg = message or f"No data price about ticker {symbol}"
+            super().__init__(msg)
+            self.symbol = symbol
+
     def __init__(self):
         super().__init__()
         # TODO: Leave default value when no Paper Account
         self.init_alpaca_trading_client(is_paper = True)
         self.init_data_historic_client()
-
-    def _get_current_trade(self, symbol):
-        request_params = StockLatestTradeRequest(symbol_or_symbols=[symbol])
-        latest_trade = self.broker_historic.get_stock_latest_trade(request_params)
-        
-        return latest_trade[symbol].price
 
     def buy_sell_stock(self, symbol, qty, target_price, stop_loss_price):
         order_request = MarketOrderRequest(
@@ -47,3 +49,20 @@ class Alpaca_Trading(Alpaca_Session):
         active_orders = {order.symbol.upper() for order in current_orders}
         
         return active_positions.union(active_orders)
+
+    def get_latest_price(self, symbol):
+        try:
+            request_params = StockLatestTradeRequest(symbol_or_symbols=[symbol])
+            latest_trade = self.broker_historic.get_stock_latest_trade(request_params)
+
+            return latest_trade[symbol].price
+        except APIError as e:
+            if "invalid symbol" in str(e).lower():
+                raise self.TickerPriceUnknownError(symbol, f"Invalid symbol returned by Alpaca: {symbol}")
+            return None
+        except requests.exceptions.HTTPError as e:
+            print(f"[ERROR] HTTP error while fetching {symbol}: {e}")
+            return None
+        except KeyError:
+            raise self.TickerPriceUnknownError(symbol)
+
