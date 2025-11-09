@@ -1,15 +1,12 @@
-from dotenv import load_dotenv
-from pathlib import Path
+from conf.prompt_manager.prompt_manager_config import PromptManagerConfig
+
 from transformers import pipeline
-import os
 
 class Prompt_Manager:
     def __init__(self):
-        dotenv_path = Path(__file__).parent / "conf/prompt.env"
-        load_dotenv(dotenv_path.resolve())
-
-        self.prompt_tpl = os.getenv("P_PROMPT_TPL")
-        self.out_json_format = os.getenv("P_OUT_JSON_FORMAT")
+        self.configuration = PromptManagerConfig.load()
+        self.prompt_tpl = self.configuration.input_tpl
+        self.out_json_format = self.configuration.output_tpl
 
         self.sentiment_pipeline = pipeline(
                 "sentiment-analysis",

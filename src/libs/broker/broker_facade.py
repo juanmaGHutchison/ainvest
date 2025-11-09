@@ -4,19 +4,16 @@ from libs.broker.alpaca.alpaca_news import Alpaca_News
 from libs.broker.yahoo_finance.yahoo_finance_historic_data import Yahoo_Historic_Data
 from libs.broker.alpaca.alpaca_trading import Alpaca_Trading
 
+from conf.broker.broker_config import BrokerConfig
+
 from math import floor
-from dotenv import load_dotenv
-from pathlib import Path
-import os
 
 class Broker_Facade(Broker_Interface):
+
     def __init__(self):
-        dotenv_path = Path(__file__).parent / "conf/broker.env"
-        load_dotenv(dotenv_path.resolve())
-        self.invest_threshold = float(os.getenv("MAX_INVEST", 0.))
-        self.blacklist = os.getenv("BLACKLIST", "")
-        self.blacklist = [s.strip() for s in self.blacklist.split(",") if s.strip()]
-        self.blacklist = [s.upper() for s in self.blacklist]
+        self.configuration = BrokerConfig.load()
+        self.invest_threshold = self.configuration.max_invest
+        self.blacklist = self.configuration.blacklist
 
         self.broker_news: Alpaca_News
         self.broker_historic: Yahoo_Historic_Data

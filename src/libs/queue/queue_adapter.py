@@ -1,9 +1,10 @@
 from libs.queue.queue_interface import Queue_Interface
+from conf.queue.queue_config import QueueConfig
+from conf.queue.cache_config import CacheConfig
+
 from kafka import KafkaProducer
 from kafka import KafkaConsumer
 
-from dotenv import load_dotenv
-from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 
 import redis
@@ -13,14 +14,14 @@ import os
 
 class Queue_Adapter(Queue_Interface):
     def __init__(self):
-        dotenv_path = Path(__file__).parent / "conf/kafka.env"
-        load_dotenv(dotenv_path.resolve())
-        self.KAFKA_SERVER = f"{os.getenv('KAFKA_DOCKER_NAME')}:{os.getenv('KAFKA_PORT')}"
-        self.TOPIC = os.getenv("MAIN_TOPIC")
+        self.kafka_configuration = QueueConfig.load()
+        self.redis_configuration = CacheConfig.load()
+        self.KAFKA_SERVER = f"{self.kafka_configuration.docker_name}:{self.kafka_configuration.port}"
+        self.TOPIC = self.kafka_configuration.main_topic
 
         self.redis_cache = redis.Redis(
-                host = os.getenv("REDIS_HOST"),
-                port = int(os.getenv("REDIS_PORT")),
+                host = self.redis_configuration.host,
+                port = self.redis_configuration.port,
                 db = 0
             )
 
@@ -58,6 +59,7 @@ class Queue_Adapter(Queue_Interface):
                 handler(json.loads(message_raw, strict=False))
             except Exception as e:
                 print(f"[ERROR] Processing failed: {e}")
+                print("--------------------------")
 
     def start_consuming(self, handler_function):
         self.consumer.subscribe([self.TOPIC])

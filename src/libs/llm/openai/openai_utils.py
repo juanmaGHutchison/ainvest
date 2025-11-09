@@ -1,7 +1,6 @@
 from openai import OpenAI, RateLimitError, BadRequestError, APIError
+from conf.llm.llm_config import LLMConfig
 
-from dotenv import load_dotenv
-from pathlib import Path
 from time import sleep, time
 import os
 import threading
@@ -23,19 +22,18 @@ class OpenAI_Client:
             super().__init__(msg)
 
     def __init__(self):
-        dotenv_path = Path(__file__).parent / "conf/openai.env"
-        load_dotenv(dotenv_path.resolve())
-
-        openai_models_str = os.getenv("OPENAI_MODELS", "")
+        self.configuration = LLMConfig.load()
         self.a_model_ready = True
-        self.openai_models = [m.strip() for m in openai_models_str.split(",") if m.strip()]
+        self.openai_models = self.configuration.openai_models
         self.openai_model_iterator = iter(self.openai_models)
         self.current_openai_model = next(self.openai_model_iterator)
+        # Docker exported variable AINVEST_PERSISTENT_DIR
         self.failover_status_db = os.path.join(os.getenv("AINVEST_PERSISTENT_DIR", ""), "failover_state.db")
 
+        # TODO: setup base_url in config file
         self.openai_client = OpenAI(
                 base_url = "https://models.github.ai/inference",
-                api_key = os.getenv("OPENAI_API_KEY")
+                api_key = self.configuration.openai_api_key
                 )
 
     def _print_remmaining_reuse_model_time(self, model, elapsed):

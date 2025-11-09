@@ -6,3 +6,4 @@ python-dateutil
 kafka-python
 redis
 pandas
+pydantic
