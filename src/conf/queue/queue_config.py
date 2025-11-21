@@ -8,6 +8,7 @@ class QueueConfig(BaseModel):
     docker_name: str
     port: int
     main_topic: str
+    score_threshold: int = Field(gt=0, description="Must be > 0")
     
     @classmethod
     def load(cls) -> "QueueConfig":

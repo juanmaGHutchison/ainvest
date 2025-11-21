@@ -34,7 +34,6 @@ class Alpaca_Trading(Alpaca_Session):
             )
 
         order = self.broker_trading.submit_order(order_data = order_request)
-        print(f"Order performed. Invested(qty): {qty}")
 
     def get_current_balance(self):
         return self.broker_trading.get_account().cash
@@ -44,10 +43,15 @@ class Alpaca_Trading(Alpaca_Session):
         current_orders = self.broker_trading.get_orders(
                 GetOrdersRequest(status='open', limit = 100)
                 )
+        active_positions = {
+                s.upper() for pos in current_positions
+                for s in (pos.symbol if isinstance(pos.symbol, list) else [pos.symbol])
+        }
+        active_orders = {
+            s.upper() for order in current_orders
+            for s in (order.symbol if isinstance(order.symbol, list) else [order.symbol])
+        }
 
-        active_positions = {pos.symbol.upper() for pos in current_positions}
-        active_orders = {order.symbol.upper() for order in current_orders}
-        
         return active_positions.union(active_orders)
 
     def get_latest_price(self, symbol):

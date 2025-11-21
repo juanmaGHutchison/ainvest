@@ -1,17 +1,14 @@
 from alpaca_trade_api import Stream, REST
 from alpaca.data.historical import StockHistoricalDataClient
 from alpaca.trading.client import TradingClient
-
-from dotenv import load_dotenv
-from pathlib import Path
-import os
+from conf.broker.broker_config import BrokerConfig
 
 class Alpaca_Session:
     def __init__(self):
-        dotenv_path = Path(__file__).parent / "conf/alpaca.env"
-        load_dotenv(dotenv_path.resolve())
-        self.api_key = os.getenv("API_KEY")
-        self.api_secret = os.getenv("API_SECRET")
+        self.configuration = BrokerConfig.load()
+        self.api_key = self.configuration.api_key
+        self.api_secret = self.configuration.api_secret
+        self.api_endpoint = self.configuration.api_endpoint
 
         self.broker_historic: StockHistoricalDataClient
         self.broker: Stream
@@ -35,6 +32,6 @@ class Alpaca_Session:
         self.broker_rest = REST(
                 self.api_key,
                 self.api_secret,
-                base_url = "https://paper-api.alpaca.markets"
+                base_url = self.api_endpoint
             )
 

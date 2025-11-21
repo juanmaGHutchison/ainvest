@@ -50,13 +50,16 @@ class Queue_Adapter(Queue_Interface):
     
     def _handle_message(self, message, handler):
         message_raw = message.value
-        message_id = hashlib.sha256(message_raw.encode("utf-8")).hexdigest()
+        message_json = json.loads(message_raw)
+        message_id = hashlib.sha256(
+                json.dumps(message_raw, sort_keys=True).encode("utf-8")
+            ).hexdigest()
 
         if not self.redis_cache.get(message_id):
             try:
                 self.consumer.commit()
                 self.redis_cache.setex(message_id, 86400, "1")
-                handler(json.loads(message_raw, strict=False))
+                handler(message_json)
             except Exception as e:
                 print(f"[ERROR] Processing failed: {e}")
                 print("--------------------------")
@@ -70,8 +73,7 @@ class Queue_Adapter(Queue_Interface):
     def send(self, data):
         data_to_json = json.loads(data)
 
-        # TODO: put threshold in config file
-        if data_to_json["score"] > 70:
+        if data_to_json["score"] > self.kafka_configuration.score_threshold:
             self.producer.send(self.TOPIC, data)
             self.producer.flush()
 

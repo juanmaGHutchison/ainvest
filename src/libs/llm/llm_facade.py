@@ -12,6 +12,7 @@ class LLM_Facade(LLM_Interface):
         try:
             return self.openai_client.prompt_to_chatgpt(prompt)
         except OpenAI_Client.OpenAI_Rate_Limit as e:
-            print(f"[ERROR] {e}")
+            print(f"[WARN] {e}")
             self.failover_model()
+            return self.openai_client.prompt_to_chatgpt(prompt)
 

@@ -7,6 +7,8 @@ from libs.broker.alpaca.alpaca_trading import Alpaca_Trading
 from conf.broker.broker_config import BrokerConfig
 
 from math import floor
+from textwrap import dedent
+import requests
 
 class Broker_Facade(Broker_Interface):
 
@@ -18,10 +20,6 @@ class Broker_Facade(Broker_Interface):
         self.broker_news: Alpaca_News
         self.broker_historic: Yahoo_Historic_Data
         self.broker_trading: Alpaca_Trading
-
-        # TODO: put in config file
-        # This is the money to spend as base. If operation is very good, more will be spent
-        self.base_investment = 5
 
     def init_news_api(self):
         self.broker_news = Alpaca_News()
@@ -36,29 +34,39 @@ class Broker_Facade(Broker_Interface):
         self.broker_news.fetch_news(stock, handler_function)
 
     def get_data_from_stock(self, stock):
-        # TODO: config file
-        n_days_ago = 90
-        return self.broker_historic.fetch_historic_prices_from(n_days_ago, stock)
+        return self.broker_historic.fetch_historic_prices_from(
+                self.configuration.historic_lookback_days, stock
+            )
 
-    def buy_stock(self, symbol, latest_value, target_price, stop_loss_price):
+    def buy_stock(self, symbol, latest_value, target_price):
         gap_of_goodness = (target_price - latest_value) / latest_value
-        investment = self.base_investment * (1 + gap_of_goodness)
+        investment = self.configuration.base_investment * (1 + gap_of_goodness)
         balance = float(self.broker_trading.get_current_balance())
 
         qty = max(floor(investment/latest_value), 1) 
+        stop_loss_price = latest_value * (1 - self.configuration.stop_loss_percentage / 100)
         total_cost = qty * latest_value
 
         has_cash = balance >= total_cost
         worthwhile_operation = qty >= 1
 
         if has_cash and worthwhile_operation:
+            print(dedent(f"""\
+            [INFO] Ticker {symbol} invest operation data:
+            \t- Current price: {latest_value}
+            \t- Invested amount: {total_cost}
+            \t- Stop loss price: {stop_loss_price}
+            \t- Target price: {target_price}
+            \t- Shares to buy(qty): {qty}
+            -----------------------------------------------------"""))
+
             self.broker_trading.buy_sell_stock(symbol, qty, target_price, stop_loss_price)
         else:
             # TODO: Use log files
             if not has_cash:
-                print (f"⚠️  Account balance is {balance} and investment requires {total_cost}€. Ignoring operation")
+                print (f"[WARNING]  Account balance is {balance} and investment requires {total_cost}€. Ignoring operation")
             if not worthwhile_operation:
-                print (f"QTY to sell will be less than 1. This operation is worthless")
+                print (f"[WARNING] QTY to sell will be less than 1. This operation is worthless")
 
     def is_blacklisted(self, symbols):
         if isinstance(symbols, str):
@@ -69,7 +77,11 @@ class Broker_Facade(Broker_Interface):
         return any(symbol in self.blacklist for symbol in symbols)
 
     def is_already_open(self, symbols):
-        active_symbols = self.broker_trading.get_active_symbols()
+        try:
+            active_symbols = self.broker_trading.get_active_symbols()
+        except requests.exceptions.ConnectionError as e:
+            print(f"[ERROR] Network error while fetching active symbol(s) {symbols}: {e}")
+            return false
 
         if isinstance(symbols, str):
             symbols = [symbols]

@@ -29,11 +29,9 @@ class OpenAI_Client:
         self.current_openai_model = next(self.openai_model_iterator)
         # Docker exported variable AINVEST_PERSISTENT_DIR
         self.failover_status_db = os.path.join(os.getenv("AINVEST_PERSISTENT_DIR", ""), "failover_state.db")
-
-        # TODO: setup base_url in config file
         self.openai_client = OpenAI(
-                base_url = "https://models.github.ai/inference",
-                api_key = self.configuration.openai_api_key
+                base_url = self.configuration.base_url,
+                api_key = self.configuration.api_key
                 )
 
     def _print_remmaining_reuse_model_time(self, model, elapsed):
@@ -102,12 +100,11 @@ class OpenAI_Client:
 
     def prompt_to_chatgpt(self, prompt):
         try:
-            # TODO: put temperature and top_p in dotenv
             print(f"[DEBUG] Using {self.current_openai_model} openAI model")
             response = self.openai_client.chat.completions.create(
                     messages = [{"role": "user", "content": prompt}],
-                    temperature = 0.7,
-                    top_p = 1.0,
+                    temperature = self.configuration.openai_model_temperature,
+                    top_p = self.configuration.openai_model_top_p,
                     model = self.current_openai_model
                     )
 
@@ -120,7 +117,7 @@ class OpenAI_Client:
                 print(f"[ERROR] OpenAI BadRequestError: {err_msg}")
             return None
         except RateLimitError as e:
-            raise OpenAI_Rate_Limit(self.current_openai_model)
+            raise OpenAI_Client.OpenAI_Rate_Limit(self.current_openai_model)
         except APIError as e:
             print(f"[ERROR] OpenAI API error: {e}")
             return None

@@ -1,4 +1,6 @@
 from libs.maths.strategy_interface import Strategy_Interface
+from conf.broker.broker_config import BrokerConfig
+from conf.maths.maths_config import MathsConfig
 
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
@@ -6,13 +8,13 @@ from tensorflow.keras.layers import LSTM, Dense, Input
 
 import numpy as np
 
-# TODO: use cache for training
 class LSTM_Strategy(Strategy_Interface):
-    def __init__(self, n_days_predict, seq_len = 60):
+    def __init__(self):
+        self.configuration = MathsConfig.load()
+        self.broker_configuration = BrokerConfig.load()
         self.scaler = MinMaxScaler(feature_range=(0,1))
         self.model = None
-        self.n_days_predict = n_days_predict
-        self.seq_len = seq_len
+        self.seq_len = self.configuration.window_size_days
 
     def _create_sequences(self, data):
         x, y = [], []
@@ -24,6 +26,7 @@ class LSTM_Strategy(Strategy_Interface):
 
     def _train(self, data):
         scaled = self.scaler.fit_transform(data)
+        # TODO what is seq_len
         x, y = self._create_sequences(scaled)
         x = x.reshape((x.shape[0], x.shape[1], 1))
 
@@ -43,7 +46,7 @@ class LSTM_Strategy(Strategy_Interface):
         last_seq = scaled[-self.seq_len:].reshape(1, self.seq_len, 1)
         preds = []
 
-        for _ in range(self.n_days_predict):
+        for _ in range(self.broker_configuration.historic_lookback_days):
             next_scaled = self.model.predict(last_seq, verbose=0)[0][0]
             preds.append(next_scaled)
             last_seq = np.append(last_seq[:, 1:, :], [[[next_scaled]]], axis=1)

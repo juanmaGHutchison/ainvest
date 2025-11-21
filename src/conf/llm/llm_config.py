@@ -1,10 +1,17 @@
 #!/usr/bin/env python3
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, HttpUrl, field_validator
 from conf.loader import ConfigLoader
 
 class LLMConfig(BaseModel):
-    openai_api_key: str
+    api_key: str
+    base_url: HttpUrl
     openai_models: list[str]
+    openai_model_temperature: float = Field(ge=0.0, le=2.0)
+    openai_model_top_p: float = Field(ge=0.0, le=1.0)
+
+    @field_validator("base_url", mode="after")
+    def conver_base_url_to_str(cls, v):
+        return str(v)
 
     @classmethod
     def load(cls) -> "LLMConfig":
