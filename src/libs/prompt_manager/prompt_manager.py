@@ -1,9 +1,13 @@
 from conf.prompt_manager.prompt_manager_config import PromptManagerConfig
+from libs.log_manager.logger_factory import LoggerFactory
 
 from transformers import pipeline
 
 class Prompt_Manager:
-    def __init__(self):
+    def __init__(self, logger_service_who):
+        self.log = LoggerFactory(logger_service_who)
+        self.log.init_logger(self.log.prompt_manager)
+
         self.configuration = PromptManagerConfig.load()
         self.prompt_tpl = self.configuration.input_tpl
         self.out_json_format = self.configuration.output_tpl

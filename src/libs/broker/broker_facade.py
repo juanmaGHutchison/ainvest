@@ -5,6 +5,7 @@ from libs.broker.yahoo_finance.yahoo_finance_historic_data import Yahoo_Historic
 from libs.broker.alpaca.alpaca_trading import Alpaca_Trading
 
 from conf.broker.broker_config import BrokerConfig
+from libs.log_manager.logger_factory import LoggerFactory
 
 from math import floor
 from textwrap import dedent
@@ -12,7 +13,10 @@ import requests
 
 class Broker_Facade(Broker_Interface):
 
-    def __init__(self):
+    def __init__(self, logger_service_who):
+        self.log = LoggerFactory(logger_service_who)
+        self.log.init_logger(self.log.broker)
+
         self.configuration = BrokerConfig.load()
         self.invest_threshold = self.configuration.max_invest
         self.blacklist = self.configuration.blacklist
@@ -51,22 +55,16 @@ class Broker_Facade(Broker_Interface):
         worthwhile_operation = qty >= 1
 
         if has_cash and worthwhile_operation:
-            print(dedent(f"""\
-            [INFO] Ticker {symbol} invest operation data:
-            \t- Current price: {latest_value}
-            \t- Invested amount: {total_cost}
-            \t- Stop loss price: {stop_loss_price}
-            \t- Target price: {target_price}
-            \t- Shares to buy(qty): {qty}
-            -----------------------------------------------------"""))
+            message = f"CurrentPrice:{latest_value}|InvestedAmount:{total_cost}|StopLossPrice:{stop_loss_price}|SellSuccessPrice:{target_price}|SharesToBuyInQTY:{qty}"
+            self.log.info(message, symbol)
 
             self.broker_trading.buy_sell_stock(symbol, qty, target_price, stop_loss_price)
         else:
-            # TODO: Use log files
             if not has_cash:
-                print (f"[WARNING]  Account balance is {balance} and investment requires {total_cost}€. Ignoring operation")
+                message = f"Account balance is {balance} and investment requires {total_cost}€. Skipping"
             if not worthwhile_operation:
-                print (f"[WARNING] QTY to sell will be less than 1. This operation is worthless")
+                message = "QTY to sell will be less than 1. This operation is worthless. Skipping"
+            self.log.warning(message, symbol)
 
     def is_blacklisted(self, symbols):
         if isinstance(symbols, str):
@@ -80,7 +78,8 @@ class Broker_Facade(Broker_Interface):
         try:
             active_symbols = self.broker_trading.get_active_symbols()
         except requests.exceptions.ConnectionError as e:
-            print(f"[ERROR] Network error while fetching active symbol(s) {symbols}: {e}")
+            message = f"Network error while fetching active symbol(s): {e}"
+            self.log.error(message, symbols)
             return false
 
         if isinstance(symbols, str):
@@ -98,11 +97,13 @@ class Broker_Facade(Broker_Interface):
                 latest_symbol_price = self.broker_trading.get_latest_price(symbol)
                 omit_operation = latest_symbol_price > self.invest_threshold
                 if (omit_operation):
-                    print(f"[DEBUG] {symbol} price {latest_symbol_price} is greater than configured invest threshold {self.invest_threshold}")
+                    message = f"Current price {latest_symbol_price} is greater than configured invest threshold {self.invest_threshold}"
+                    self.log.warning(message, symbol)
                     break
 
             return omit_operation
-        except Alpaca_Trading.TickerPriceUnknownError as e:
-            print(f"[WARN] {e}. Cowardly ommitting operation")
+        except Alpaca_Trading.AlpacaTradingException as e:
+            message = f"{e}. Skipping."
+            self.log.warning(message, symbols)
             return False
 

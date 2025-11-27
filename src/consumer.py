@@ -3,14 +3,19 @@
 from libs.broker.broker_facade import Broker_Facade
 from libs.queue.queue_adapter import Queue_Adapter
 from libs.maths.lstm_strategy import LSTM_Strategy
+from libs.log_manager.logger_factory import LoggerFactory
 
 import numpy as np
 
 class Consumer:
     def __init__(self):
-        self.broker = Broker_Facade()
-        self.queue_consumer = Queue_Adapter()
-        self.lstm = LSTM_Strategy()
+        logger_service_type = self.__class__.__name__
+        self.log = LoggerFactory(logger_service_type)
+        self.log.init_logger(self.log.consumer)
+        
+        self.broker = Broker_Facade(logger_service_type)
+        self.queue_consumer = Queue_Adapter(logger_service_type)
+        self.lstm = LSTM_Strategy(logger_service_type)
 
         self.broker.init_historic_api()
         self.broker.init_trading_api()
@@ -23,7 +28,8 @@ class Consumer:
         for ticker in tickers:
             prices_series = self.broker.get_data_from_stock(ticker)
             if prices_series.empty:
-                print(f"[WARN] Skipping {ticker}: no price data available")
+                message = f"no price data available. Skipping."
+                self.log.warning(message, ticker)
                 continue
             prices = prices_series.values.reshape(-1, 1)
             latest_price = float(prices[-1].item())

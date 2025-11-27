@@ -10,9 +10,9 @@ import time
 import requests
 
 class Alpaca_Trading(Alpaca_Session):
-    class TickerPriceUnknownError(Exception):
+    class AlpacaTradingException(Exception):
         def __init__(self, symbol, message = None):
-            msg = message or f"No data price about ticker {symbol}"
+            msg = message or f"Alpaca Trading unexpected error"
             super().__init__(msg)
             self.symbol = symbol
 
@@ -62,11 +62,10 @@ class Alpaca_Trading(Alpaca_Session):
             return latest_trade[symbol].price
         except APIError as e:
             if "invalid symbol" in str(e).lower():
-                raise self.TickerPriceUnknownError(symbol, f"Invalid symbol returned by Alpaca: {symbol}")
+                raise self.AlpacaTradingException(symbol, f"Invalid symbol returned by Alpaca: {symbol}")
             return None
         except requests.exceptions.HTTPError as e:
-            print(f"[ERROR] HTTP error while fetching {symbol}: {e}")
-            return None
+            raise self.AlpacaTradingException(symbol, f"HTTP error while fetching ticker: {e}")
         except KeyError:
-            raise self.TickerPriceUnknownError(symbol)
+            raise self.AlpacaTradingException(symbol, f"No info about the price of this symbol. Skipping")
 

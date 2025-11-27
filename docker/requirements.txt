@@ -7,3 +7,5 @@ kafka-python
 redis
 pandas
 pydantic
+pyyaml
+colorlog

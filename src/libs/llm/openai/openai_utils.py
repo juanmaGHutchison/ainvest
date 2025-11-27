@@ -1,6 +1,8 @@
 from openai import OpenAI, RateLimitError, BadRequestError, APIError
 from conf.llm.llm_config import LLMConfig
 
+from libs.log_manager.logger_factory import LoggerFactory
+
 from time import sleep, time
 import os
 import threading
@@ -21,14 +23,17 @@ class OpenAI_Client:
 
             super().__init__(msg)
 
-    def __init__(self):
+    def __init__(self, service_type_who):
+        self.log = LoggerFactory(service_type_who)
+        self.log.init_logger(self.log.openai)
+
         self.configuration = LLMConfig.load()
         self.a_model_ready = True
         self.openai_models = self.configuration.openai_models
         self.openai_model_iterator = iter(self.openai_models)
         self.current_openai_model = next(self.openai_model_iterator)
-        # Docker exported variable AINVEST_PERSISTENT_DIR
-        self.failover_status_db = os.path.join(os.getenv("AINVEST_PERSISTENT_DIR", ""), "failover_state.db")
+        # Variable AINVEST_PERSISTENT_DIR exported inside Docker container
+        self.failover_status_db = os.path.join(os.getenv("AINVEST_PERSISTENT_DIR", ""), "failover_state")
         self.openai_client = OpenAI(
                 base_url = self.configuration.base_url,
                 api_key = self.configuration.api_key
@@ -41,7 +46,7 @@ class OpenAI_Client:
         seconds = int(remaining % ONE_MINUTE)
         remaining_time = f"{hours:02d}h {minutes:02d}m {seconds:02d}s"
 
-        print(f"[DEBUG] Remmaining time to reuse the model {model}: {remaining_time}")
+        self.log.debug(f"Remmaining time to reuse the model {model}: {remaining_time}")
 
     def _is_model_cold(self, model):
         model_is_cooled = False
@@ -56,9 +61,9 @@ class OpenAI_Client:
                 sleep(ONE_HOUR)
 
         if model_is_cooled:
-            print(f"[DEBUG] Model {model} is active again. To be re-activated")
+            self.log.debug(f"Model {model} is active again. To be re-activated")
         if model_not_cold:
-            print(f"[DEBUG] Model {model} is already active")
+            self.log.debug(f"Model {model} is already active")
 
         return model_is_cooled or model_not_cold
 
@@ -69,15 +74,16 @@ class OpenAI_Client:
 
             if model_priority > current_model_priority:
                 self.current_openai_model = model
-                print(f"[INFO] Model {self.current_openai_model} active back again")
+                message = f"Model {self.current_openai_model} active back again"
             else:
-                print(f"[INFO] Model {model} ready to work again. Current active model is {self.current_openai_model}")
+                message = f"Model {model} ready to work again. Current active model is {self.current_openai_model}"
+            self.log.info(message)
 
             self.a_model_ready = True
 
             with shelve.open(self.failover_status_db) as cooldowns:
                 del cooldowns[model]
-                print(f"[DEBUG] Removed {model} from cooldown DB stored in {self.failover_status_db}")
+                self.log.debug(f"Removed {model} from cooldown DB stored in {self.failover_status_db}")
 
     def failover_openai_model(self):
         try:
@@ -91,16 +97,16 @@ class OpenAI_Client:
                     daemon = True
                     ).start()
             self.current_openai_model = next(self.openai_model_iterator)
-            print(f"[INFO] Switching to model {self.current_openai_model}")
+            self.log.info(f"Switching to model {self.current_openai_model}")
         except StopIteration:
-            print(f"[INFO] No more available models to use")
+            self.log.warning("No more available models to use")
             self.a_model_ready = False
             while not self.a_model_ready:
                 sleep(5) # wait 5 seconds
 
     def prompt_to_chatgpt(self, prompt):
         try:
-            print(f"[DEBUG] Using {self.current_openai_model} openAI model")
+            self.log.debug(f"Using {self.current_openai_model} openAI model")
             response = self.openai_client.chat.completions.create(
                     messages = [{"role": "user", "content": prompt}],
                     temperature = self.configuration.openai_model_temperature,
@@ -112,13 +118,13 @@ class OpenAI_Client:
         except BadRequestError as e:
             err_msg = str(e)
             if 'content_filter' in err_msg:
-                print("[WARN] OpenAI content moderation filetered the response. Prompt ignored")
+                self.log.warning("OpenAI content moderation filetered the response. Prompt ignored")
             else:
-                print(f"[ERROR] OpenAI BadRequestError: {err_msg}")
+                self.log.error(f"OpenAI BadRequestError: {err_msg}")
             return None
         except RateLimitError as e:
             raise OpenAI_Client.OpenAI_Rate_Limit(self.current_openai_model)
         except APIError as e:
-            print(f"[ERROR] OpenAI API error: {e}")
+            self.log.error(f"OpenAI API error: {e}")
             return None
 

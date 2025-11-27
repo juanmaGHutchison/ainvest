@@ -1,0 +1,103 @@
+version: 1
+
+formatters:
+  simple:
+    format: "%(levelname)s|%(asctime)s|%(name)s|%(message)s"
+    datefmt: "%d/%m/%Y|%H:%M:%S"
+
+  colored:
+    "()": colorlog.ColoredFormatter
+    format: "%(log_color)s[%(levelname)s]|%(asctime)s|%(name)s|%(message)s%(reset)s"
+    datefmt: "%d/%m/%Y|%H:%M:%S"
+    log_colors:
+      DEBUG:    "cyan"
+      INFO:     "green"
+      WARNING:  "yellow"
+      ERROR:    "red"
+      CRITICAL: "bold_red"
+
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: DEBUG
+    formatter: colored
+    stream: ext://sys.stdout
+  producer:
+    class: logging.handlers.RotatingFileHandler
+    level: DEBUG
+    formatter: simple
+    filename: /persistence/{log_root}/producer.log
+    maxBytes: 31457280                                  # 30 MB
+    backupCount: 8
+    encoding: utf-8
+  consumer:
+    class: logging.handlers.RotatingFileHandler
+    level: DEBUG
+    formatter: simple
+    filename: /persistence/{log_root}/consumer.log
+    maxBytes: 31457280                                  # 30 MB
+    backupCount: 8
+    encoding: utf-8
+  broker:
+    class: logging.handlers.RotatingFileHandler
+    level: DEBUG
+    formatter: simple
+    filename: /persistence/{log_root}/broker.log
+    maxBytes: 31457280                                  # 30 MB
+    backupCount: 8
+    encoding: utf-8
+  llm:
+    class: logging.handlers.RotatingFileHandler
+    level: DEBUG
+    formatter: simple
+    filename: /persistence/{log_root}/llm.log
+    maxBytes: 31457280                                  # 30 MB
+    backupCount: 8
+    encoding: utf-8
+  queue:
+    class: logging.handlers.RotatingFileHandler
+    level: DEBUG
+    formatter: simple
+    filename: /persistence/{log_root}/queue.log
+    maxBytes: 31457280                                  # 30 MB
+    backupCount: 8
+    encoding: utf-8
+
+loggers:
+  app:
+    level: DEBUG
+    handlers: [console,producer, consumer, broker, llm, queue]
+    propagate: no
+  producer:
+    level: DEBUG
+    handlers: [console,producer]
+    propagate: no
+  consumer:
+    level: DEBUG
+    handlers: [console,consumer]
+    propagate: no
+  broker.facade:
+    level: DEBUG
+    handlers: [console,broker]
+    propagate: no
+  alpaca.trading:
+    level: DEBUG
+    handlers: [console,broker]
+    propagate: no
+  llm.facade:
+    level: DEBUG
+    handlers: [console,llm]
+    propagate: no
+  openai.client:
+    level: DEBUG
+    handlers: [console,llm]
+    propagate: no
+  queue.adapter:
+    level: DEBUG
+    handlers: [console,queue]
+    propagate: no
+
+root:
+  level: INFO
+  handlers: [console]
+

@@ -1,6 +1,7 @@
 from libs.queue.queue_interface import Queue_Interface
 from conf.queue.queue_config import QueueConfig
 from conf.queue.cache_config import CacheConfig
+from libs.log_manager.logger_factory import LoggerFactory
 
 from kafka import KafkaProducer
 from kafka import KafkaConsumer
@@ -13,7 +14,10 @@ import json
 import os
 
 class Queue_Adapter(Queue_Interface):
-    def __init__(self):
+    def __init__(self, logger_service_who):
+        self.log = LoggerFactory(logger_service_who)
+        self.log.init_logger(self.log.queue)
+
         self.kafka_configuration = QueueConfig.load()
         self.redis_configuration = CacheConfig.load()
         self.KAFKA_SERVER = f"{self.kafka_configuration.docker_name}:{self.kafka_configuration.port}"
@@ -61,8 +65,7 @@ class Queue_Adapter(Queue_Interface):
                 self.redis_cache.setex(message_id, 86400, "1")
                 handler(message_json)
             except Exception as e:
-                print(f"[ERROR] Processing failed: {e}")
-                print("--------------------------")
+                self.log.error(f"Processing failed: {e}")
 
     def start_consuming(self, handler_function):
         self.consumer.subscribe([self.TOPIC])

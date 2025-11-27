@@ -1,6 +1,7 @@
 from libs.maths.strategy_interface import Strategy_Interface
 from conf.broker.broker_config import BrokerConfig
 from conf.maths.maths_config import MathsConfig
+from libs.log_manager.logger_factory import LoggerFactory
 
 from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
@@ -9,7 +10,10 @@ from tensorflow.keras.layers import LSTM, Dense, Input
 import numpy as np
 
 class LSTM_Strategy(Strategy_Interface):
-    def __init__(self):
+    def __init__(self, logger_service_who):
+        self.log = LoggerFactory(logger_service_who)
+        self.log.init_logger(self.log.maths_lstm)
+
         self.configuration = MathsConfig.load()
         self.broker_configuration = BrokerConfig.load()
         self.scaler = MinMaxScaler(feature_range=(0,1))

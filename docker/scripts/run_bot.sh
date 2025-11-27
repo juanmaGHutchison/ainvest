@@ -93,10 +93,11 @@ if [ -n "${BUILD_DOCKER_IMAGE:-}" ]; then
     docker build -t "${IMAGE_INSTANCE_NAME}" \
 	--build-arg BASE_IMAGE=${IMAGE_BASE_OUTPUT_NAME} -f ${DOCKERFILE_TB_USED} ${DOCKER_PATH}
 else
+    declare PERSISTENT_DOCKER_DIR="/$(basename ${PERSISTENCE_PATH})"
     docker run -ti --rm \
         -v $(realpath $(dirname ${RUNNING_SCRIPT})):/app \
-	-v ${PERSISTENCE_PATH}:${PERSISTENCE_PATH} \
-	-e AINVEST_PERSISTENT_DIR=${PERSISTENCE_PATH} \
+	-v ${PERSISTENCE_PATH}:${PERSISTENT_DOCKER_DIR} \
+	-e AINVEST_PERSISTENT_DIR=${PERSISTENT_DOCKER_DIR} \
 	--name ${DOCKER_CONTAINER_NAME} \
         --network ${BROKER_DOCKER_NETWORK} \
 	${DOCKER_ADDITIONAL_PARAMS:-} \

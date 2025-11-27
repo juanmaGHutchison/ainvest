@@ -4,45 +4,57 @@ from libs.broker.broker_facade import Broker_Facade
 from libs.queue.queue_adapter import Queue_Adapter
 from libs.llm.llm_facade import LLM_Facade
 from libs.prompt_manager.prompt_manager import Prompt_Manager
+from libs.log_manager.logger_factory import LoggerFactory
 
 class Producer:
     def __init__(self):
-        self.broker = Broker_Facade()
-        self.queue_producer = Queue_Adapter()
-        self.llm = LLM_Facade()
+        logger_service_type = self.__class__.__name__
+        self.log = LoggerFactory(logger_service_type)
+        self.log.init_logger(self.log.producer)
+
+        self.broker = Broker_Facade(logger_service_type)
+        self.queue_producer = Queue_Adapter(logger_service_type)
+        self.llm = LLM_Facade(logger_service_type)
 
         self.queue_producer.init_producer()
         self.broker.init_news_api()
         self.broker.init_trading_api()
-        self.prompt = Prompt_Manager()
+        self.prompt = Prompt_Manager(logger_service_type)
 
     def _pre_filter(self, news):
+        ticker = news.symbols
         is_positive_news = self.prompt.is_positive_news(news)
-        is_not_blacklist = not self.broker.is_blacklisted(news.symbols)
-        is_not_opened = not self.broker.is_already_open(news.symbols)
-        is_under_threshold_invest = self.broker.is_under_threshold_invest(news.symbols)
+        is_not_blacklist = not self.broker.is_blacklisted(ticker)
+        is_not_opened = not self.broker.is_already_open(ticker)
+        is_under_threshold_invest = self.broker.is_under_threshold_invest(ticker)
 
         if (not is_positive_news):
-            print(f"[DEBUG] Skipping news for {news.symbols}: Negative news")
+            message = "Negative news. Skipping"
+            self.log.debug(message, ticker)
         if (not is_not_blacklist):
-            print(f"[DEBUG] Skipping news for {news.symbols}: Blacklisted")
+            message = "Blacklisted ticker. Skipping"
+            self.log.debug(message, ticker)
         if (not is_not_opened):
-            print(f"[DEBUG] Skipping news for {news.symbols}: Symbol has already an open operation")
+            message = "Ticker has already an open operation. Skipping" 
+            self.log.debug(message, ticker)
         if (is_under_threshold_invest):
-            print(f"[DEBUG] Skipping news for {news.symbols}: Price of a share is more expensive than configured threshold in app")
+            message = "Price of a share is more expensive than configured threshold in app. Skipping"
+            self.log.debug(message, ticker)
 
         return is_positive_news and is_not_blacklist and is_not_opened and not is_under_threshold_invest
 
     def process_news(self, news):
+        ticker = news.symbols
         if self._pre_filter(news):
             llm_response = self.llm.send_prompt(
                     self.prompt.prompt_to_json_input(news)
                     )
-            print({llm_response})
+            self.log.info({llm_response}, ticker)
 
             self.queue_producer.send(llm_response)
         else:
-            print(f"[INFO] Skipping news for {news.symbols}: did not pass pre-filters") 
+            message = "Ticker did not pass pre-filters. Skipping"
+            self.log.info(message, ticker) 
 
     def start_producing(self):
         self.broker.fetch_news('*', self.process_news)
