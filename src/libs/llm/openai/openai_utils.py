@@ -1,4 +1,4 @@
-from openai import OpenAI, RateLimitError, BadRequestError, APIError
+from openai import OpenAI, RateLimitError, BadRequestError, APIError, APIStatusError
 from conf.llm.llm_config import LLMConfig
 
 from libs.log_manager.logger_factory import LoggerFactory
@@ -46,7 +46,7 @@ class OpenAI_Client:
         seconds = int(remaining % ONE_MINUTE)
         remaining_time = f"{hours:02d}h {minutes:02d}m {seconds:02d}s"
 
-        self.log.debug(f"Remmaining time to reuse the model {model}: {remaining_time}")
+        self.log.debug(f"Remmaining time to reuse the model {model}: {remaining_time}", model)
 
     def _is_model_cold(self, model):
         model_is_cooled = False
@@ -61,9 +61,9 @@ class OpenAI_Client:
                 sleep(ONE_HOUR)
 
         if model_is_cooled:
-            self.log.debug(f"Model {model} is active again. To be re-activated")
+            self.log.debug(f"Model {model} is active again. To be re-activated", model)
         if model_not_cold:
-            self.log.debug(f"Model {model} is already active")
+            self.log.debug(f"Model {model} is already active", model)
 
         return model_is_cooled or model_not_cold
 
@@ -77,13 +77,16 @@ class OpenAI_Client:
                 message = f"Model {self.current_openai_model} active back again"
             else:
                 message = f"Model {model} ready to work again. Current active model is {self.current_openai_model}"
-            self.log.info(message)
+            self.log.info(message, model)
 
             self.a_model_ready = True
 
             with shelve.open(self.failover_status_db) as cooldowns:
                 del cooldowns[model]
-                self.log.debug(f"Removed {model} from cooldown DB stored in {self.failover_status_db}")
+                self.log.debug(f"Removed {model} from cooldown DB stored in {self.failover_status_db}", model)
+
+    def get_current_openai_model(self):
+        return self.current_openai_model
 
     def failover_openai_model(self):
         try:
@@ -97,7 +100,7 @@ class OpenAI_Client:
                     daemon = True
                     ).start()
             self.current_openai_model = next(self.openai_model_iterator)
-            self.log.info(f"Switching to model {self.current_openai_model}")
+            self.log.info(f"Switching to model {self.current_openai_model}", self.current_openai_model)
         except StopIteration:
             self.log.warning("No more available models to use")
             self.a_model_ready = False
@@ -106,7 +109,7 @@ class OpenAI_Client:
 
     def prompt_to_chatgpt(self, prompt):
         try:
-            self.log.debug(f"Using {self.current_openai_model} openAI model")
+            self.log.debug(f"Using {self.current_openai_model} openAI model", self.current_openai_model)
             response = self.openai_client.chat.completions.create(
                     messages = [{"role": "user", "content": prompt}],
                     temperature = self.configuration.openai_model_temperature,
@@ -118,13 +121,17 @@ class OpenAI_Client:
         except BadRequestError as e:
             err_msg = str(e)
             if 'content_filter' in err_msg:
-                self.log.warning("OpenAI content moderation filetered the response. Prompt ignored")
+                self.log.warning("OpenAI content moderation filetered the response. Prompt ignored", self.current_openai_model)
             else:
-                self.log.error(f"OpenAI BadRequestError: {err_msg}")
+                self.log.error(f"OpenAI BadRequestError: {err_msg}", self.current_openai_model)
             return None
         except RateLimitError as e:
             raise OpenAI_Client.OpenAI_Rate_Limit(self.current_openai_model)
+        except APIStatusError as e:
+            err_msg = str(e)
+            if 'tokens_limit_reached' in err_msg:
+                self.log.error(f"Limit tokens exceeded for model {self.current_openai_model}: {e}", self.current_openai_model)
         except APIError as e:
-            self.log.error(f"OpenAI API error: {e}")
+            self.log.error(f"OpenAI API error: {e}", self.current_openai_model)
             return None
 

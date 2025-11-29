@@ -12,7 +12,7 @@ class LoggerConfig:
 
         # Variable AINVEST_PERSISTENT_DIR exported inside Docker container
         persistence_dir = os.getenv("AINVEST_PERSISTENT_DIR", "")
-        self.log_root = service_type
+        self.log_root = f"log/{service_type}"
         logging_dir = Path(persistence_dir) / self.log_root
         logging_dir.mkdir(parents = True, exist_ok = True)
 

@@ -67,5 +67,5 @@ class Alpaca_Trading(Alpaca_Session):
         except requests.exceptions.HTTPError as e:
             raise self.AlpacaTradingException(symbol, f"HTTP error while fetching ticker: {e}")
         except KeyError:
-            raise self.AlpacaTradingException(symbol, f"No info about the price of this symbol. Skipping")
+            raise self.AlpacaTradingException(symbol, f"No info about the price of this symbol")
 

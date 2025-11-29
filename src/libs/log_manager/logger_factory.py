@@ -29,7 +29,8 @@ class LoggerFactory:
 
         self.logger: logging
 
-        self.config = LoggerConfig(cfg.config_file, service_type)
+        self.service_type = service_type
+        self.config = LoggerConfig(cfg.config_file, self.service_type)
         self.config.configure()
 
     def init_logger(self, classname):
@@ -38,23 +39,23 @@ class LoggerFactory:
 
         self.logger = logging.getLogger(classname)
 
-    def _parse_msg(self, ticker, message):
-        return f"{ticker}|{message}"
+    def _parse_msg(self, entity, message):
+        return f"{self.service_type}|{entity}|{message}"
 
-    def debug(self, message, ticker = "Unknown"):
-        self.logger.debug(self._parse_msg(ticker, message))
+    def debug(self, message, entity = "Unknown"):
+        self.logger.debug(self._parse_msg(entity, message))
 
-    def info(self, message, ticker = "Unknown"):
-        self.logger.info(self._parse_msg(ticker, message))
+    def info(self, message, entity = "Unknown"):
+        self.logger.info(self._parse_msg(entity, message))
 
-    def warning(self, message, ticker = "Unknown"):
-        self.logger.warning(self._parse_msg(ticker, message))
+    def warning(self, message, entity = "Unknown"):
+        self.logger.warning(self._parse_msg(entity, message))
         
-    def error(self, message, ticker = "Unknown"):
-        self.logger.error(self._parse_msg(ticker, message))
+    def error(self, message, entity = "Unknown"):
+        self.logger.error(self._parse_msg(entity, message))
 
-    def critical(self, message, ticker = "Unknown"):
-        self.logger.critical(self._parse_msg(ticker, message))
+    def critical(self, message, entity = "Unknown"):
+        self.logger.critical(self._parse_msg(entity, message))
 
     @property
     def producer(self):

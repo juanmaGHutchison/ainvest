@@ -17,7 +17,7 @@ class LLM_Facade(LLM_Interface):
         try:
             return self.openai_client.prompt_to_chatgpt(prompt)
         except OpenAI_Client.OpenAI_Rate_Limit as e:
-            self.log.warning(f"{e}")
+            self.log.warning(f"{e}", self.openai_client.get_current_openai_model())
             self.failover_model()
             return self.openai_client.prompt_to_chatgpt(prompt)
 
