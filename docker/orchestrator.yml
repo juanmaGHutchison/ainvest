@@ -1,0 +1,84 @@
+services:
+  kafka:
+    build:
+      context: .
+      dockerfile: Dockerfile.kafka
+    image: "${KAFKA__IMG_NAME}"
+    container_name: "${KAFKA__CONTAINER_NAME}"
+    environment:
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_NODE_ID: 1
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_LOG_DIRS: "${KAFKA__DOCKER_LOG}"
+      CLUSTER_ID: "${CLUSTER_ID}"
+    networks:
+      - "${DCCOMMON__BROKER_NET}"
+    ports:
+      - "${KAFKA__PORTS}:${KAFKA__PORTS}"
+    volumes:
+      - "${KAFKA_CLUSTER}:${KAFKA__DOCKER_LOG}"
+
+  redis:
+    image: redis:latest
+    container_name: "${REDIS__CONTAINER_NAME}"
+    networks:
+      - "${DCCOMMON__BROKER_NET}"
+    ports:
+      - "${REDIS__PORTS}:${REDIS__PORTS}"
+
+  base:
+    build:
+      context: .
+      dockerfile: Dockerfile.common
+    image: "${BASEPC__IMG_NAME}"
+
+  producer:
+    build:
+      context: .
+      dockerfile: Dockerfile.producer
+      args:
+        BASE_IMAGE: "${BASEPC__IMG_NAME}"
+    environment:
+      AINVEST_PERSISTENT_DIR: "${BASEPC__PERSISTENT_DIR}"
+    networks:
+      - "${DCCOMMON__BROKER_NET}"
+    volumes:
+      - ../src:/app
+      - ../persistence:${BASEPC__PERSISTENT_DIR}
+    depends_on:
+      - "${KAFKA__CONTAINER_NAME}"
+      - "${REDIS__CONTAINER_NAME}"
+    command: [ "python3", "producer.py" ]
+
+  consumer:
+    build:
+      context: .
+      dockerfile: Dockerfile.consumer
+      args:
+        BASE_IMAGE: "${BASEPC__IMG_NAME}"
+    networks:
+      - "${DCCOMMON__BROKER_NET}"
+    environment:
+      AINVEST_PERSISTENT_DIR: "${BASEPC__PERSISTENT_DIR}"
+    volumes:
+      - ../src:/app
+      - ../persistence:${BASEPC__PERSISTENT_DIR}
+    depends_on:
+      - "${KAFKA__CONTAINER_NAME}"
+      - "${REDIS__CONTAINER_NAME}"
+    runtime: nvidia
+    command: [ "python3", "consumer.py" ]
+
+networks:
+  broker-net:
+
+volumes:
+  kafka-data:
