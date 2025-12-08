@@ -34,18 +34,10 @@ services:
     ports:
       - "${REDIS__PORTS}:${REDIS__PORTS}"
 
-  base:
-    build:
-      context: .
-      dockerfile: Dockerfile.common
-    image: "${BASEPC__IMG_NAME}"
-
   producer:
     build:
       context: .
       dockerfile: Dockerfile.producer
-      args:
-        BASE_IMAGE: "${BASEPC__IMG_NAME}"
     environment:
       AINVEST_PERSISTENT_DIR: "${BASEPC__PERSISTENT_DIR}"
     networks:
@@ -62,8 +54,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.consumer
-      args:
-        BASE_IMAGE: "${BASEPC__IMG_NAME}"
     networks:
       - "${DCCOMMON__BROKER_NET}"
     environment:
