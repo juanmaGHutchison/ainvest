@@ -1,11 +1,19 @@
 FROM confluentinc/cp-kafka:latest
 
 ARG KAFKA_PROP_FILENAME="kafka.properties"
+ARG KAFKA_LOG4J_CONFIG="log4j2.yaml.template"
 
-COPY resources/${KAFKA_PROP_FILENAME} /etc/kafka
+ARG KAFKA_CONF="/etc/kafka"
+ARG KAFKA_LOG_TPL_PATH="/etc/confluent/docker"
+ARG RES_DIR="resources"
+
+COPY ${RES_DIR}/${KAFKA_PROP_FILENAME} ${KAFKA_CONF}/${KAFKA_PROP_FILENAME}
+COPY ${RES_DIR}/${KAFKA_LOG4J_CONFIG} ${KAFKA_LOG_TPL_PATH}/${KAFKA_LOG4J_CONFIG}
 
 USER root
 
-RUN chown appuser:root /etc/kafka/${KAFKA_PROP_FILENAME}
+RUN     chown appuser:root ${KAFKA_CONF}/${KAFKA_PROP_FILENAME} && \
+        chmod 644 ${KAFKA_LOG_TPL_PATH}/${KAFKA_LOG4J_CONFIG} && \
+        chown appuser:appuser ${KAFKA_LOG_TPL_PATH}/${KAFKA_LOG4J_CONFIG}
 
 USER appuser
