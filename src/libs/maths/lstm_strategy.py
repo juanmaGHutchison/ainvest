@@ -8,6 +8,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Input
 
 import numpy as np
+import os
 
 class LSTM_Strategy(Strategy_Interface):
     def __init__(self, logger_service_who):
@@ -30,7 +31,6 @@ class LSTM_Strategy(Strategy_Interface):
 
     def _train(self, data):
         scaled = self.scaler.fit_transform(data)
-        # TODO what is seq_len
         x, y = self._create_sequences(scaled)
         x = x.reshape((x.shape[0], x.shape[1], 1))
 
@@ -44,6 +44,10 @@ class LSTM_Strategy(Strategy_Interface):
         self.model.fit(x, y, epochs=50, batch_size=32, verbose=0)
 
     def predict(self, data):
+        if len(data) < self.seq_len:
+            self.log.critical(f"Error in configuration. 'BROKER__HISTORIC_LOOPBACK_DAYS' value shall be lower than 'MATHS__WINDO_SIZE_DAYS'. Shutting down APP.", "PRECONDITION")
+            os._exit(1)
+
         self._train(data)
 
         scaled = self.scaler.transform(data)

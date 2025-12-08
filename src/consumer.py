@@ -37,7 +37,7 @@ class Consumer:
             mean_prediction_price = float(np.mean(prices))
             target_price = max (mean_prediction_price, latest_price * 1.02)
             self.broker.buy_stock(ticker, latest_price, target_price)
-                
+
     def start_consumer(self):
         self.queue_consumer.start_consuming(self.consuming_handler)
 
