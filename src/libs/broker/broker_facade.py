@@ -8,7 +8,6 @@ from conf.broker.broker_config import BrokerConfig
 from libs.log_manager.logger_factory import LoggerFactory
 
 from math import floor
-from textwrap import dedent
 import requests
 
 class Broker_Facade(Broker_Interface):
@@ -59,7 +58,10 @@ class Broker_Facade(Broker_Interface):
             self.log.info(message, symbol)
 
             self.broker_trading.buy_sell_stock(symbol, qty, target_price, stop_loss_price)
+            message = f"CurrentBalance:{balance}"
+            self.log.info(message, "BALANCE")
         else:
+            message = "Unknown"
             if not has_cash:
                 message = f"Account balance is {balance} and investment requires {total_cost}€. Skipping"
             if not worthwhile_operation:
@@ -80,7 +82,7 @@ class Broker_Facade(Broker_Interface):
         except requests.exceptions.ConnectionError as e:
             message = f"Network error while fetching active symbol(s): {e}"
             self.log.error(message, symbols)
-            return false
+            return False
 
         if isinstance(symbols, str):
             symbols = [symbols]

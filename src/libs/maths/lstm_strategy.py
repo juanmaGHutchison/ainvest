@@ -21,6 +21,21 @@ class LSTM_Strategy(Strategy_Interface):
         self.model = None
         self.seq_len = self.configuration.window_size_days
 
+    
+    def _fix_outliers_iqr(self, data):
+        d = data.reshape(-1)
+
+        q1 = np.percentile(d, 25)
+        q3 = np.percentile(d, 75)
+        iqr = q3 - q1
+
+        lower = q1 - 1.5 * iqr
+        upper = q3 + 1.5 * iqr
+
+        fixed = np.clip(d, lower, upper)
+
+        return fixed.reshape(-1, 1)
+
     def _create_sequences(self, data):
         x, y = [], []
         for i in range(self.seq_len, len(data)):
@@ -30,7 +45,8 @@ class LSTM_Strategy(Strategy_Interface):
         return np.array(x), np.array(y)
 
     def _train(self, data):
-        scaled = self.scaler.fit_transform(data)
+        cleaned = self._fix_outliers_iqr(data)
+        scaled = self.scaler.fit_transform(cleaned)
         x, y = self._create_sequences(scaled)
         x = x.reshape((x.shape[0], x.shape[1], 1))
 
@@ -45,12 +61,13 @@ class LSTM_Strategy(Strategy_Interface):
 
     def predict(self, data):
         if len(data) < self.seq_len:
-            self.log.critical(f"Error in configuration. 'BROKER__HISTORIC_LOOPBACK_DAYS' value shall be lower than 'MATHS__WINDO_SIZE_DAYS'. Shutting down APP.", "PRECONDITION")
+            self.log.critical(f"Error in configuration. 'BROKER__HISTORIC_LOOPBACK_DAYS' value shall be greater than 'MATHS__WINDO_SIZE_DAYS'. Shutting down APP.", "PRECONDITION")
             os._exit(1)
 
-        self._train(data)
+        cleaned = self._fix_outliers_iqr(data)
+        self._train(cleaned)
 
-        scaled = self.scaler.transform(data)
+        scaled = self.scaler.transform(cleaned)
         last_seq = scaled[-self.seq_len:].reshape(1, self.seq_len, 1)
         preds = []
 

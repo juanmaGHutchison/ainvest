@@ -15,7 +15,7 @@ class Broker_Interface(ABC):
         pass
 
     @abstractmethod
-    def fetch_news(self, stock, what_to_do_func):
+    def fetch_news(self, stock, handler_function):
         pass
 
     @abstractmethod
@@ -23,7 +23,7 @@ class Broker_Interface(ABC):
         pass
 
     @abstractmethod
-    def buy_stock(symbol, latest_value, target_price):
+    def buy_stock(self, symbol, latest_value, target_price):
         pass
 
     @abstractmethod
