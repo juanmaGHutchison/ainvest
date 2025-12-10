@@ -14,7 +14,7 @@ class Prompt_Manager:
 
         self.sentiment_pipeline = pipeline(
                 "sentiment-analysis",
-                model = "distilbert-base-uncased-finetuned-sst-2-english"
+                model = "ProsusAI/finbert"
                 )
 
     def prompt_to_json_input(self, in_json):
@@ -27,5 +27,5 @@ class Prompt_Manager:
     def is_positive_news(self, news):
         result = self.sentiment_pipeline(news.headline)[0]
 
-        return result['label'] == 'POSITIVE' and result['score'] > 0.8
+        return result['label'] == 'positive'
 

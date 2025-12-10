@@ -60,8 +60,8 @@ class LSTM_Strategy(Strategy_Interface):
         self.model.fit(x, y, epochs=50, batch_size=32, verbose=0)
 
     def predict(self, data):
-        if len(data) < self.seq_len:
-            self.log.critical(f"Error in configuration. 'BROKER__HISTORIC_LOOPBACK_DAYS' value shall be greater than 'MATHS__WINDO_SIZE_DAYS'. Shutting down APP.", "PRECONDITION")
+        if self.broker_configuration.historic_lookback_days < self.seq_len:
+            self.log.critical(f"Error in configuration. 'BROKER__HISTORIC_LOOPBACK_DAYS({self.broker_configuration.historic_lookback_days})' value shall be greater than 'MATHS__WINDO_SIZE_DAYS({self.seq_len})'. Shutting down APP.", "PRECONDITION")
             os._exit(1)
 
         cleaned = self._fix_outliers_iqr(data)

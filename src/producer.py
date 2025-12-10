@@ -23,11 +23,16 @@ class Producer:
 
     def _pre_filter(self, news):
         ticker = news.symbols
+        message = ""
         is_positive_news = self.prompt.is_positive_news(news)
         is_not_blacklist = not self.broker.is_blacklisted(ticker)
         is_not_opened = not self.broker.is_already_open(ticker)
         is_under_threshold_invest = self.broker.is_under_threshold_invest(ticker)
+        is_null_news = news.summary is None
 
+        if (is_null_news):
+            message = "Empty Summary news. Skipping"
+            self.log.debug(message, ticker)
         if (not is_positive_news):
             message = "Negative news. Skipping"
             self.log.debug(message, ticker)
@@ -41,7 +46,8 @@ class Producer:
             message = "Price of a share is more expensive than configured threshold in app. Skipping"
             self.log.debug(message, ticker)
 
-        return is_positive_news and is_not_blacklist and is_not_opened and not is_under_threshold_invest
+        return is_positive_news and is_not_blacklist and is_not_opened and not is_under_threshold_invest \
+                and not is_null_news
 
     def process_news(self, news):
         ticker = news.symbols
