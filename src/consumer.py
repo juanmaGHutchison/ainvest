@@ -5,8 +5,6 @@ from libs.queue.queue_adapter import Queue_Adapter
 from libs.maths.lstm_strategy import LSTM_Strategy
 from libs.log_manager.logger_factory import LoggerFactory
 
-import numpy as np
-
 class Consumer:
     def __init__(self):
         logger_service_type = self.__class__.__name__
@@ -26,17 +24,16 @@ class Consumer:
         tickers = [t] if isinstance(t, str) else (t or [])
 
         for ticker in tickers:
-            prices_series = self.broker.get_data_from_stock(ticker)
-            if prices_series.empty:
-                message = f"no price data available. Skipping."
-                self.log.warning(message, ticker)
+            prices = self.broker.get_data_from_stock(ticker)
+            if prices.empty:
+                self.log.warning(f"no price data available. Skipping.", ticker)
                 continue
-            prices = prices_series.values.reshape(-1, 1)
-            latest_price = float(prices[-1].item())
-            prices = self.lstm.predict(prices)
-            mean_prediction_price = float(np.mean(prices))
-            target_price = max (mean_prediction_price, latest_price * 1.02)
-            self.broker.buy_stock(ticker, latest_price, target_price)
+
+            self.broker.buy_stock(
+                    ticker,
+                    float(prices.iloc[-1]),
+                    self.lstm.predict(prices)
+                    )
 
     def start_consumer(self):
         self.queue_consumer.start_consuming(self.consuming_handler)
