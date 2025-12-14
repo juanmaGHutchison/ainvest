@@ -90,11 +90,11 @@ These settings control **how the system is deployed**, not how it behaves.
 - Docker Compose
 - NVIDIA GPU support for model execution
 
-### Unified Launcher (`run_app.sh`)
+### Unified Launcher (`ainvest.sh`)
 The system is started using a single launcher script:
 
 ```bash
-docker/scritps/run_app.sh
+docker/scritps/ainvest.sh
 ```
 
 This script acts as the entry point for the entire platform and is responsible for:
@@ -105,7 +105,7 @@ This script acts as the entry point for the entire platform and is responsible f
 Once the script is available in your PATH, the system can be launched from any directory.
 
 ```bash
-run_app.sh
+ainvest.sh
 ```
 
 ---

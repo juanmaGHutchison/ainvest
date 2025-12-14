@@ -1,10 +1,10 @@
 #!/bin/bash
 
-set -Eeuo pipefail
+set -Eeuox pipefail
 
 ############# GLOBAL VARIABLES
-declare BASH_SRC_rapp="$(dirname "${BASH_SOURCE[0]}")"
-declare ROOT_REPO_PATH="${BASH_SRC_rapp}/../.."
+declare BASH_SRC_rapp="$(readlink -f "${BASH_SOURCE[0]}")"
+declare ROOT_REPO_PATH="$(dirname "${BASH_SRC_rapp}")/../.."
 declare DOCKER_PATH="${ROOT_REPO_PATH}/docker"
 
 declare ORCHEST_YML="${DOCKER_PATH}/orchestrator.yml"
