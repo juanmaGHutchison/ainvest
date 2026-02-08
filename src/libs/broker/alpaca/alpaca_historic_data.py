@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 from libs.broker.alpaca.alpaca_session import Alpaca_Session
-from alpaca.data import StockTradesRequest
+from alpaca.data.timeframe import TimeFrame
+from alpaca.data.requests import StockBarsRequest
 
 from datetime import datetime, timedelta
 
@@ -14,15 +15,28 @@ class Alpaca_Historic_Data(Alpaca_Session):
 
     def fetch_historic_from(self, n_days_ago, ticker):
         yesterday = datetime.today() - timedelta(days=1)
+        start = yesterday - timedelta(days = n_days_ago)
+        end = yesterday
 
-        self.historic_data_params = StockTradesRequest(
-                symbol_or_symbols = ticker,
-                start = yesterday - timedelta(days = n_days_ago),
-                end = yesterday
+        request = StockBarsRequest(
+                    symbol_or_symbols = ticker,
+                    timeframe = TimeFrame.Day,
+                    start = start,
+                    end = end
                 )
 
-        trades = self.broker_historic.get_stock_trades(self.historic_data_params)
-        return trades[ticker]
+        bars = self.brocker_historic.get_stock_bars(request)
+
+        if ticker not in bars or bars[ticker].empty:
+            return None
+
+        df = bars[ticker]
+
+        series = df["close"].copy()
+        series.index = pd.to_datetime(df.index)
+        series.name = ticker
+
+        return series.sort_index()
 
     def get_prices_from_historic(self, list_of_trades):
         dataframe = pd.DataFrame ([{

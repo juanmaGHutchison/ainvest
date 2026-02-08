@@ -36,12 +36,12 @@ class Broker_Facade(Broker_Interface):
     def fetch_news(self, stock, handler_function):
         self.broker_news.fetch_news(stock, handler_function)
 
-    def get_data_from_stock(self, stock):
-        return self.broker_historic.fetch_historic_prices_from(
-                self.configuration.historic_lookback_days, stock
-            )
+    def get_data_from_stock(self, stock, omit_filter = None):
+        return None if omit_filter and omit_filter(stock) else \
+                self.broker_historic.fetch_historic_prices_from(
+                    self.configuration.historic_lookback_days, stock)
 
-    def buy_stock(self, symbol, latest_value, target_price):
+    def buy_stock(self, symbol, strategy, latest_value, target_price):
         gap_of_goodness = (target_price - latest_value) / latest_value
         investment = self.configuration.base_investment * (1 + gap_of_goodness)
         balance = float(self.broker_trading.get_current_balance())
@@ -54,7 +54,7 @@ class Broker_Facade(Broker_Interface):
         worthwhile_operation = qty >= 1
 
         if has_cash and worthwhile_operation:
-            message = f"CurrentPrice:{latest_value}|InvestedAmount:{total_cost}|StopLossPrice:{stop_loss_price}|SellSuccessPrice:{target_price}|SharesToBuyInQTY:{qty}"
+            message = f"Strategy:{strategy}|CurrentPrice:{latest_value}|InvestedAmount:{total_cost}|StopLossPrice:{stop_loss_price}|SellSuccessPrice:{target_price}|SharesToBuyInQTY:{qty}"
             self.log.info(message, symbol)
 
             self.broker_trading.buy_sell_stock(symbol, qty, target_price, stop_loss_price)
@@ -108,4 +108,7 @@ class Broker_Facade(Broker_Interface):
             message = f"{e}. Skipping."
             self.log.warning(message, symbols)
             return False
+
+    def get_all_tickers(self):
+        return self.broker_trading.get_all_tickers()
 

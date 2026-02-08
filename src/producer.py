@@ -51,16 +51,16 @@ class Producer:
 
     def process_news(self, news):
         ticker = news.symbols
-        if self._pre_filter(news):
-            llm_response = self.llm.send_prompt(
+        # if self._pre_filter(news):
+        llm_response = self.llm.send_prompt(
                     self.prompt.prompt_to_json_input(news)
                     )
-            self.log.info({llm_response}, ticker)
+        self.log.info({llm_response}, ticker)
 
-            self.queue_producer.send(llm_response)
-        else:
-            message = "Ticker did not pass pre-filters. Skipping"
-            self.log.info(message, ticker) 
+        self.queue_producer.send(llm_response)
+        # else:
+        #     message = "Ticker did not pass pre-filters. Skipping"
+        #     self.log.info(message, ticker) 
 
     def start_producing(self):
         self.broker.fetch_news('*', self.process_news)

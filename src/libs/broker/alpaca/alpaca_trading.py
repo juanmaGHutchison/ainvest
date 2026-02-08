@@ -1,6 +1,6 @@
 from libs.broker.alpaca.alpaca_session import Alpaca_Session
 
-from alpaca.trading.requests import LimitOrderRequest, MarketOrderRequest
+from alpaca.trading.requests import LimitOrderRequest, MarketOrderRequest, GetAssetsRequest
 from alpaca.trading.enums import OrderSide, OrderClass, TimeInForce
 from alpaca.data.requests import StockLatestTradeRequest
 from alpaca.trading.requests import GetOrdersRequest
@@ -69,3 +69,10 @@ class Alpaca_Trading(Alpaca_Session):
         except KeyError:
             raise self.AlpacaTradingException(symbol, f"No info about the price of this symbol")
 
+    def get_all_tickers(self):
+        assets = self.broker_trading.get_all_assets(GetAssetsRequest())
+        return [
+                asset.symbol
+                for asset in assets
+                if asset.tradable and asset.status == "active"
+            ]

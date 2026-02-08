@@ -11,7 +11,7 @@ COPY ${RES_DIR}/apt.packages ./
 RUN apt-get update && apt-get install -y --no-install-recommends \
     $(cat apt.packages) && \
     pip3 install \
-	numpy scikit-learn tensorflow==2.16.2 && \
+	xgboost numpy scikit-learn tensorflow==2.16.2 && \
     pip3 install --no-cache-dir -r requirements.txt
 
 WORKDIR /app

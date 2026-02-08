@@ -1,4 +1,16 @@
 services:
+  trainer:
+    build:
+      context: .
+      dockerfile: Dockerfile.consumer
+    container_name: "${TRAINER__CONTAINER_NAME}"
+    environment:
+      AINVEST_PERSISTENT_DIR: "${BASEPC__PERSISTENT_DIR}"
+    volumes:
+      - ../src:/app
+      - ../persistence:${BASEPC__PERSISTENT_DIR}
+    command: [ "python3", "train_ai.py" ]
+
   kafka:
     build:
       context: .
@@ -48,6 +60,7 @@ services:
     depends_on:
       - "${KAFKA__CONTAINER_NAME}"
       - "${REDIS__CONTAINER_NAME}"
+      - "${TRAINER__CONTAINER_NAME}"
     command: [ "python3", "producer.py" ]
 
   consumer:
@@ -64,6 +77,7 @@ services:
     depends_on:
       - "${KAFKA__CONTAINER_NAME}"
       - "${REDIS__CONTAINER_NAME}"
+      - "${TRAINER__CONTAINER_NAME}"
     runtime: nvidia
     command: [ "python3", "consumer.py" ]
 

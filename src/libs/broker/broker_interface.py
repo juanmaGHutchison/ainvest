@@ -19,11 +19,11 @@ class Broker_Interface(ABC):
         pass
 
     @abstractmethod
-    def get_data_from_stock(self, stock):
+    def get_data_from_stock(self, stock, omit_filter = None):
         pass
 
     @abstractmethod
-    def buy_stock(self, symbol, latest_value, target_price):
+    def buy_stock(self, symbol, strategy, latest_value, target_price):
         pass
 
     @abstractmethod
@@ -32,4 +32,8 @@ class Broker_Interface(ABC):
 
     @abstractmethod
     def is_already_open(self, symbols):
+        pass
+
+    @abstractmethod
+    def get_all_tickers(self):
         pass
