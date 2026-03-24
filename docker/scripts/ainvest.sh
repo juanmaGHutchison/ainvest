@@ -8,6 +8,7 @@ declare ROOT_REPO_PATH="$(dirname "${BASH_SRC_rapp}")/../.."
 declare DOCKER_PATH="${ROOT_REPO_PATH}/docker"
 
 declare ORCHEST_YML="${DOCKER_PATH}/orchestrator.yml"
+declare ORCHEST_TRAIN_YML="${DOCKER_PATH}/trainer_orchestrator.yml"
 declare ENV_FILE="${DOCKER_PATH}/config.env"
 declare KAFKA_CLUSTER=$(mktemp -dt KAFKA_XXXX)
 declare CLUSTER_ID
@@ -66,7 +67,7 @@ while [[ $# -gt 0 ]]; do
     case "${1:-}" in
         -h|--help) usage ;;
         -d|--debug) set -x ;;
-        --train-only) TRAIN_ONLY="trainer" ;;
+        --train-only) TRAIN_ONLY="y" ;;
         -*) echo "Unknown option $1"; usage ;;
     esac
     shift
@@ -83,8 +84,13 @@ CLUSTER_ID="$(get_cluster_id)"
 init_cluster "${CLUSTER_ID}"
 chown -R 1000:1000 "${KAFKA_CLUSTER}"
 
-CLUSTER_ID="${CLUSTER_ID}" KAFKA_CLUSTER="${KAFKA_CLUSTER}" \
-    docker compose --env-file "${ENV_FILE}" -f "${ORCHEST_YML}" up --build "${TRAIN_ONLY:-}"
+if [ -n "${TRAIN_ONLY:-}" ]; then
+    CLUSTER_ID="${CLUSTER_ID}" KAFKA_CLUSTER="${KAFKA_CLUSTER}" \
+        docker compose --env-file "${ENV_FILE}" -f "${ORCHEST_TRAIN_YML}" up --build
+else
+    CLUSTER_ID="${CLUSTER_ID}" KAFKA_CLUSTER="${KAFKA_CLUSTER}" \
+        docker compose --env-file "${ENV_FILE}" -f "${ORCHEST_YML}" up --build
+fi
 
 exit 0
 

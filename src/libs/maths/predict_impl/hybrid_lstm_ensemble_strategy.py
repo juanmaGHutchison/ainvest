@@ -1,7 +1,10 @@
 from libs.maths.maths_interface import Predict_Interface
 from libs.maths.strategy_impl.lstm_strategy import LSTM_Strategy
-from libs.log_manager.logger_factory import LoggerFactory
+from libs.maths.market_window import MarketWindow
+from libs.maths.hybrid_feature_builder import HybridFeatureBuilder
 from conf.maths.maths_config import MathsConfig
+
+from libs.log_manager.logger_factory import LoggerFactory
 
 class FinalHybridStrategy(Predict_Interface):
     """
@@ -18,7 +21,6 @@ class FinalHybridStrategy(Predict_Interface):
         self.configuration = MathsConfig.load()
 
         self.lstm = LSTM_Strategy(logger_service_who)
-        self.hybrid_model = HybridEnsembleModel(logger_service_who)
 
         self.min_confidence = 0.6
 

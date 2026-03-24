@@ -114,7 +114,7 @@ class BaseTrainer(ABC):
 
     def _persist(self, model, artifacts: dict):
         model_path = self.output_dir / "model.pkl"
-        model.save(model_path) if hasattr(model, "save") else None
+        joblib.dump(model, model_path)
 
         for name, obj in artifacts.items():
             path = self.output_dir / f"{name}.pkl"

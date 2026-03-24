@@ -2,7 +2,8 @@
 
 from libs.broker.broker_facade import Broker_Facade
 from libs.queue.queue_adapter import Queue_Adapter
-from libs.maths.strategy_factory import Strategy_factory
+from libs.maths.maths_factory import Predict_factory
+from libs.maths.market_window import MarketWindow
 from libs.log_manager.logger_factory import LoggerFactory
 
 class Consumer:
@@ -13,7 +14,7 @@ class Consumer:
         
         self.broker = Broker_Facade(logger_service_type)
         self.queue_consumer = Queue_Adapter(logger_service_type)
-        self.strategy = Strategy_factory.init_strategy(logger_service_type)
+        self.strategy = Predict_factory.init_strategy(logger_service_type)
 
         self.broker.init_historic_api()
         self.broker.init_trading_api()
@@ -28,11 +29,19 @@ class Consumer:
             if prices.empty:
                 self.log.warning(f"no price data available. Skipping.", ticker)
             else: 
+                market_window = MarketWindow(
+                        ticker = ticker,
+                        prices = prices
+                )
+                predicted_return = self.strategy.predict(market_window)
+                current_price = float(prices.iloc[-1])
+                take_profit_price = current_price * (1 + predicted_return)
+
                 self.broker.buy_stock(
                         ticker,
                         self.strategy.get_strategy_name(),
-                        float(prices.iloc[-1]),
-                        self.strategy.predict(ticker, prices)
+                        current_price,
+                        take_profit_price
                         )
 
     def start_consumer(self):

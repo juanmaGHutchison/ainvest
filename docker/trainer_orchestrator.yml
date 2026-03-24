@@ -1,0 +1,13 @@
+services:
+  trainer:
+    build:
+      context: .
+      dockerfile: Dockerfile.consumer
+    container_name: "${TRAINER__CONTAINER_NAME}"
+    environment:
+      AINVEST_PERSISTENT_DIR: "${BASEPC__PERSISTENT_DIR}"
+    volumes:
+      - ../src:/app
+      - ../persistence:${BASEPC__PERSISTENT_DIR}
+    command: [ "python3", "train_ai.py" ]
+
