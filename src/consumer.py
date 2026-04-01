@@ -34,6 +34,9 @@ class Consumer:
                         prices = prices
                 )
                 predicted_return = self.strategy.predict(market_window)
+                if predicted_return <= 0:
+                    continue
+
                 current_price = float(prices.iloc[-1])
                 take_profit_price = current_price * (1 + predicted_return)
 

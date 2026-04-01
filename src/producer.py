@@ -58,6 +58,7 @@ class Producer:
         self.log.info({llm_response}, ticker)
 
         self.queue_producer.send(llm_response)
+        # TODO: Re-ADD pre-filters when sw is stable again
         # else:
         #     message = "Ticker did not pass pre-filters. Skipping"
         #     self.log.info(message, ticker) 

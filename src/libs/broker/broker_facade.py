@@ -53,6 +53,11 @@ class Broker_Facade(Broker_Interface):
         has_cash = balance >= total_cost
         worthwhile_operation = qty >= 1
 
+        # 🔹 Ajuste SL/TP según reglas broker
+        MIN_DELTA = 0.01  # delta mínimo permitido
+        stop_loss_price = min(stop_loss_price, latest_value - MIN_DELTA)
+        target_price = max(target_price, latest_value + MIN_DELTA)
+
         if has_cash and worthwhile_operation:
             message = f"Strategy:{strategy}|CurrentPrice:{latest_value}|InvestedAmount:{total_cost}|StopLossPrice:{stop_loss_price}|SellSuccessPrice:{target_price}|SharesToBuyInQTY:{qty}"
             self.log.info(message, symbol)
