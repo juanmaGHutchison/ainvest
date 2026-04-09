@@ -8,17 +8,28 @@ from libs.maths.training_impl.hybrid_ensemble_training import HybridEnsembleTrai
 
 import os
 
+def build_strategy_dir(configuration, stategy_str):
+    base_dir = os.getenv("AINVEST_PERSISTENT_DIR", "")
+    path = os.path.join(
+            base_dir,
+            configuration.training_strategy_dir,
+            stategy_str
+        )
+    os.makedirs(path, exist_ok=True)
+    return path
+
 class Predict_factory:
     @classmethod
     def init_strategy(cls, logger_service_type):
         configuration = MathsConfig.load()
         strategy_str = configuration.strategy_used
         strategy = None
+        training_dir = build_strategy_dir(configuration, strategy_str) 
 
         if strategy_str == Strategies_enum.LSTM:
-            strategy = LSTM_Strategy(logger_service_type)
+            strategy = LSTM_Strategy(logger_service_type, training_dir)
         elif strategy_str == Strategies_enum.HLSTM:
-            strategy = HybridEnsembleStrategy(logger_service_type)
+            strategy = HybridEnsembleStrategy(logger_service_type, training_dir)
 
         return strategy
 
@@ -28,17 +39,14 @@ class Training_factory:
         configuration = MathsConfig.load()
         strategy_str = configuration.strategy_used
         strategy = None
+        output_dir = build_strategy_dir(configuration, strategy_str) 
         
-        output_dir = os.path.join(
-                os.getenv("AINVEST_PERSISTENT_DIR", ""),
-                configuration.training_strategy_dir)
-        os.makedirs(output_dir, exist_ok=True)
-
         lookback = configuration.window_size_days
         horizon = configuration.window_size_horizon
 
         if strategy_str == Strategies_enum.LSTM:
             # TODO: tickers maybe not needed
+            # TODO: use marketWindow ?
             strategy = LSTM_Training(tickers = tickers,
                                      lookback = lookback,
                                      horizon = horizon,

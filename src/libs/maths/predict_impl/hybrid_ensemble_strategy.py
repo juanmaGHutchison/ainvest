@@ -7,27 +7,22 @@ from conf.maths.maths_config import MathsConfig
 
 from pathlib import Path
 
-import pandas as pd
 import joblib
 import pickle
 import os
 import json
 
 class HybridEnsembleStrategy(Predict_Interface):
-    def __init__(self, logger_service_who):
+    def __init__(self, logger_service_who, training_dir):
         self.log = LoggerFactory(logger_service_who)
         self.log.init_logger(self.log.maths_lstm)
         self.configuration = MathsConfig.load()
 
-        path = Path("/persistence/strategy")
-        for item in path.iterdir():
+        strategy_cache_dir = Path(training_dir)
+        for item in strategy_cache_dir.iterdir():
             self.log.info(item)
 
         # TODO: all pkl files shall be variables
-        strategy_cache_dir = os.path.join(
-                os.getenv("AINVEST_PERSISTENT_DIR", ""),
-                self.configuration.training_strategy_dir
-            )
         self.model = joblib.load(f"{strategy_cache_dir}/model.pkl")
         self.scaler = joblib.load(f"{strategy_cache_dir}/scaler.pkl")
 

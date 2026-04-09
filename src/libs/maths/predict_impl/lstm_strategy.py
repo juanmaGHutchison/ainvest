@@ -3,6 +3,8 @@ from libs.maths.market_window import MarketWindow
 from libs.log_manager.logger_factory import LoggerFactory
 from conf.maths.maths_config import MathsConfig
 
+from pathlib import Path
+
 import os
 import json
 import joblib
@@ -13,17 +15,13 @@ from keras.models import load_model
 
 class LSTM_Strategy(Predict_Interface):
 
-    def __init__(self, logger_service_type):
+    def __init__(self, logger_service_type, training_dir):
         self.log = LoggerFactory(logger_service_type)
         self.log.init_logger(self.log.maths_lstm)
 
         self.configuration = MathsConfig.load()
 
-        # 📁 path a artifacts
-        strategy_cache_dir = os.path.join(
-            os.getenv("AINVEST_PERSISTENT_DIR", ""),
-            self.configuration.training_strategy_dir
-        )
+        strategy_cache_dir = Path(training_dir)
 
         # ✅ cargar modelo
         self.model = load_model(f"{strategy_cache_dir}/model.keras")
