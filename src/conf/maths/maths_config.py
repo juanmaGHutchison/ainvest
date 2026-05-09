@@ -7,6 +7,7 @@ from enum import Enum
 class Strategies_enum(str, Enum):
     LSTM = "LSTM"
     HLSTM = "HybridLSTM"
+    HE = "HybridEnsemble"
 
 class MathsConfig(BaseModel):
     window_size_days: int = Field(gt=0, description="Must be > 0")

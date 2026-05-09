@@ -2,6 +2,7 @@ from conf.maths.maths_config import MathsConfig, Strategies_enum
 
 from libs.maths.predict_impl.lstm_strategy import LSTM_Strategy
 from libs.maths.predict_impl.hybrid_ensemble_strategy import HybridEnsembleStrategy
+from libs.maths.predict_impl.hybrid_lstm_strategy import HybridLSTMStrategy
 
 from libs.maths.training_impl.lstm_training import LSTM_Training
 from libs.maths.training_impl.hybrid_ensemble_training import HybridEnsembleTraining
@@ -28,11 +29,14 @@ class Predict_factory:
 
         if strategy_str == Strategies_enum.LSTM:
             strategy = LSTM_Strategy(logger_service_type, training_dir)
-        elif strategy_str == Strategies_enum.HLSTM:
+        elif strategy_str == Strategies_enum.HE:
             strategy = HybridEnsembleStrategy(logger_service_type, training_dir)
+        elif strategy_str == Strategies_enum.HLSTM:
+            strategy = HybridLSTMStrategy(logger_service_type, training_dir)
 
         return strategy
 
+# TODO: add HLSTM
 class Training_factory:
     @classmethod
     def init_training(cls, tickers, prices_dict, logger_service_type):
@@ -44,7 +48,7 @@ class Training_factory:
         lookback = configuration.window_size_days
         horizon = configuration.window_size_horizon
 
-        if strategy_str == Strategies_enum.LSTM:
+        if strategy_str == Strategies_enum.LSTM or strategy_str == Strategies_enum.HE:
             # TODO: tickers maybe not needed
             # TODO: use marketWindow ?
             strategy = LSTM_Training(tickers = tickers,
@@ -54,7 +58,7 @@ class Training_factory:
                                      prices_dict = prices_dict,
                                      logger_service_type = logger_service_type)
 
-        elif strategy_str == Strategies_enum.HLSTM:
+        if strategy_str == Strategies_enum.HE or strategy_str == Strategies_enum.HLSTM:
             strategy = HybridEnsembleTraining(tickers = tickers,
                                               lookback = lookback,
                                               horizon = horizon,
