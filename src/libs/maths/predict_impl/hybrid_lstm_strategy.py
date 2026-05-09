@@ -37,7 +37,6 @@ class HybridLSTMStrategy(Predict_Interface):
         if features is None or features.empty:
             self.log.warning(f"Feature building failed. TODO: Improve log")
 
-        # ---- Confidence estimation ----
         downside_vol = features["downside_vol"].values[0] + 1e-6
         confidence = np.tanh(abs(hybrid_return) / downside_vol)
 
@@ -45,13 +44,11 @@ class HybridLSTMStrategy(Predict_Interface):
             self.log.info(f"Low confidence ({confidence:.2f}). No trade.")
             return 0.0
 
-        # ---- Fusion ----
         final_return = (
             0.6 * hybrid_return +
             0.4 * lstm_return
         )
 
-        # ---- Risk filter ----
         expected_edge = features["volatility"].values[0] - (final_return * 0.5)
         if expected_edge <= 0:
             self.log.info("Negative risk-adjusted edge. No trade.")

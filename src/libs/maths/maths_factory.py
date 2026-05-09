@@ -36,7 +36,6 @@ class Predict_factory:
 
         return strategy
 
-# TODO: add HLSTM
 class Training_factory:
     @classmethod
     def init_training(cls, tickers, prices_dict, logger_service_type):
